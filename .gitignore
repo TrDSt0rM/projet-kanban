@@ -1,0 +1,13 @@
+# Java / Tomcat
+target/
+*.class
+.gradle/
+
+# JavaScript / Frontend / Deno
+node_modules/
+.env
+
+# IDEs
+.idea/
+.vscode/
+*.swp
