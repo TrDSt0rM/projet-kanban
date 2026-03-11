@@ -2,13 +2,18 @@ import { Application, Router } from "@oak/oak";
 import { oakCors } from "@tajpouria/cors";
 import adminRouter from "./src/routes/admin.ts";
 
-const app = new Application();
+// ---------- HTTP Router --------------------------------
+
 const rootRouter = new Router();
+
+// ---------- Application --------------------------------
 
 const PROTOCOL = "http";
 const HOSTNAME = "localhost";
 const PORT = 8000;
 const ADDRESS = `${PROTOCOL}://${HOSTNAME}:${PORT}`;
+
+const app = new Application();
 
 rootRouter.use(
   "/api/admin",

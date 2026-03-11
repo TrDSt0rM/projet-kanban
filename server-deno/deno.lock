@@ -12,6 +12,7 @@
     "jsr:@std/cli@^1.0.28": "1.0.28",
     "jsr:@std/crypto@0.221": "0.221.0",
     "jsr:@std/crypto@1": "1.0.5",
+    "jsr:@std/dotenv@0.225": "0.225.6",
     "jsr:@std/encoding@0.221": "0.221.0",
     "jsr:@std/encoding@1": "1.0.10",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
@@ -111,6 +112,9 @@
     },
     "@std/crypto@1.0.5": {
       "integrity": "0dcfbb319fe0bba1bd3af904ceb4f948cde1b92979ec1614528380ed308a3b40"
+    },
+    "@std/dotenv@0.225.6": {
+      "integrity": "1d6f9db72f565bd26790fa034c26e45ecb260b5245417be76c2279e5734c421b"
     },
     "@std/encoding@0.221.0": {
       "integrity": "d1dd76ef0dc5d14088411e6dc1dede53bf8308c95d1537df1214c97137208e45"
@@ -231,6 +235,7 @@
       "jsr:@db/mysql@^3.0.0-rc.1",
       "jsr:@oak/oak@^17.2.0",
       "jsr:@std/assert@1",
+      "jsr:@std/dotenv@0.225",
       "jsr:@std/http@^1.0.25"
     ]
   }
