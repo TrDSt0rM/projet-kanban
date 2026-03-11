@@ -1,5 +1,5 @@
-import { Client } from "https://deno.land/x/mysql@v2.12.1/mod.ts";
-import "https://deno.land/x/dotenv@v3.2.2/load.ts";
+import { Client } from "mysql";
+import "dotenv";
 
 const dbClient = await new Client().connect({
   hostname: Deno.env.get("DB_HOSTNAME") || "localhost",
