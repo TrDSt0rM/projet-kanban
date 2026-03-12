@@ -22,3 +22,8 @@ export interface LoginPayload {
     role: string,
     exp: number,
 }
+
+export interface RegisterDto {
+    pseudo: string;
+    password: string;
+}

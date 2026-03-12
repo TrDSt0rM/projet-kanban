@@ -7,7 +7,7 @@
 import { UserRepository } from "../../shared/repositories/user.repository.ts";
 import { isUserEntity } from "../../shared/utils/typeguards.ts";
 import { APIException, APIErrorCode } from "../../shared/types/mod.ts";
-import { createJWT, verifyPassword } from "../../shared/utils/crypto.utils.ts";
+import { createJWT, hashPassword, verifyPassword } from "../../shared/utils/crypto.utils.ts";
 
 export class AuthService {
 
@@ -53,4 +53,29 @@ export class AuthService {
         }
 
     }
+
+    async register(pseudo: string, password: string) {
+        
+        const hashedPassword = await hashPassword(password);
+
+        const body = {
+            pseudo: pseudo,
+            password: hashedPassword,
+        }
+
+        const response = await fetch(`http://localhost:8080/api/users`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Échec de l'enregistrement");
+        }
+
+        return true;
+    }
+
 }
