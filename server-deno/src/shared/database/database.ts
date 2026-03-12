@@ -1,5 +1,8 @@
 // src/shared/database/database.ts
 import { MysqlClient } from "@db/mysql";
+import { load } from "@std/dotenv";
+
+await load({ export: true });
 
 // Recupération des infos du .env
 const host = Deno.env.get("DB_HOSTNAME") || "localhost";
