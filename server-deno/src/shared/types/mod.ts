@@ -7,3 +7,5 @@
 
 export * from "./interfaces-entities.ts";
 export * from "./interfaces-dtos.ts";
+export * from "./api-exception.ts";
+export * from "./api-response.ts";

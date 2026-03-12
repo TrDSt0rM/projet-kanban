@@ -8,3 +8,11 @@
 
 // type des valeurs SQL retournées par la BDD/server
 export type SQLOutputValue = string | number | boolean | null;
+
+export interface UserEntity {
+    pseudo: string;
+    password: string;
+    role: string;
+    isActive: number; // 0 ou 1
+    [key: string]: SQLOutputValue; // Index signature
+}

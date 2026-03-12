@@ -4,12 +4,12 @@
  * @version 1.0.0
  * @date 2026-03-11
  */
-import { LoginDto, RegisterDto } from "../types/interfaces-dtos.ts";
+import { SQLOutputValue, LoginDto, RegisterDto, UserEntity } from "../types/mod.ts";
 
 /**
- * Vérifie si un objet est de type LoginUserRequest
+ * Vérifie si un objet est de type LoginDto
  * @param obj l'objet à vérifier
- * @returns true si l'objet est de type LoginUserRequest, false sinon
+ * @returns true si l'objet est de type LoginDto, false sinon
  */
 export function isLoginDto(obj: unknown): obj is LoginDto {
   return !!obj && typeof obj === "object" &&
@@ -23,4 +23,12 @@ export function isRegisterDto(
   return !!obj && typeof obj === "object" &&
     "pseudo" in obj && typeof obj.pseudo === "string" &&
     "password" in obj && typeof obj.password === "string";
+}
+
+export function isUserEntity(obj: Record<string, SQLOutputValue>): obj is UserEntity {
+  return !!obj && typeof obj === "object" &&
+    "pseudo" in obj && typeof obj.pseudo === "string" &&
+    "password" in obj && typeof obj.password === "string" &&
+    "role" in obj && typeof obj.role === "string" &&
+    "isActive" in obj && typeof obj.isActive === "number";
 }

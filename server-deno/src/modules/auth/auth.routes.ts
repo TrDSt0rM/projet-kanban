@@ -1,8 +1,10 @@
 import { Router } from "@oak/oak";
 import { isLoginDto } from "../../shared/utils/typeguards.ts";
 import { authService } from "../../shared/container.ts"
+import { APIErrorCode, APIException, APIResponse } from "../../shared/types/mod.ts";
+import { LoginResponseDto } from "./auth.types.ts";
 
-const router = new Router({ prefix: "/auth" });
+export const router = new Router({ prefix: "/auth" });
 
 router.post("/login", async (ctx) => {
     try {
@@ -10,21 +12,23 @@ router.post("/login", async (ctx) => {
         
         // typeguard
         if (!isLoginDto(body)){
-            ctx.response.status = 400;
-            ctx.response.body = { message: "Invalid request." };
-            return;
+            throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Invalid request body");
         }
 
-        const result = await authService.login(body.pseudo);
+        // appel du service de connexion
+        const result = await authService.login(body.pseudo, body.password);
         
-        ctx.response.status = 200;
-        ctx.response.body = {
+        // construction et envoie de la reponse
+        const responseBody: APIResponse<LoginResponseDto> = {
             success: true,
             data: result,
-        }
+        };
+
+        ctx.response.status = 200;
+        ctx.response.body = responseBody;
+
     } catch (err) {
         console.error(err);
-        ctx.response.status = 500;
-        ctx.response.body = { message: "Fail to login." };   
+        throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Internal server error");
     }
 });
