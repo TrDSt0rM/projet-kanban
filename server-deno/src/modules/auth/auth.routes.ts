@@ -68,8 +68,11 @@ router.post("/register", async (ctx) => {
         }
 
         // appel du service d'enregistrement
-        await authService.register(body.pseudo, body.password);
+        const result = await authService.register(body.pseudo, body.password);
 
+        if (!result) {
+            throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Failed to register user");
+        }
         // construction et envoie de la reponse
         const responseBody: APIResponse<null> = {
             success: true,
