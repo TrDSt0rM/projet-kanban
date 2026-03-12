@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@tajpouria/cors@^1.2.1": "1.2.1",
     "npm:@deno/vite-plugin@^1.0.6": "1.0.6_vite@7.3.1__@types+node@24.12.0",
     "npm:@eslint/js@^9.39.1": "9.39.4",
     "npm:@fontsource-variable/geist@^5.2.8": "5.2.8",
@@ -29,6 +30,11 @@
     "npm:vite-tsconfig-paths@^6.1.1": "6.1.1_vite@7.3.1__@types+node@24.12.0_typescript@5.9.3",
     "npm:vite@*": "7.3.1_@types+node@24.12.0",
     "npm:vite@^7.3.1": "7.3.1_@types+node@24.12.0"
+  },
+  "jsr": {
+    "@tajpouria/cors@1.2.1": {
+      "integrity": "eca42e4fb7cb3906ef0ee3d1e565dd6bb4632ccd8e70a95cf4279759743328f0"
+    }
   },
   "npm": {
     "@antfu/ni@25.0.0": {
@@ -4317,6 +4323,9 @@
     }
   },
   "workspace": {
+    "dependencies": [
+      "jsr:@tajpouria/cors@^1.2.1"
+    ],
     "packageJson": {
       "dependencies": [
         "npm:@deno/vite-plugin@^1.0.6",
