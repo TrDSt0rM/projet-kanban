@@ -1,13 +1,13 @@
 import { Router } from "@oak/oak";
-import dbClient from "../config/db.ts";
+import dbClient from "../shared/database/database.ts";
 
 const adminRouter = new Router();
 
 adminRouter.get("/users", async (ctx) => {
-  const result = await dbClient.execute(
+  const result = await dbClient.query(
     "SELECT pseudo, role, isActive FROM APP_USER",
   );
-  ctx.response.body = result.rows;
+  ctx.response.body = result;
 });
 
 adminRouter.post("/users", async (ctx) => {

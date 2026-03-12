@@ -1,5 +1,5 @@
 import { Router } from "@oak/oak";
-import dbClient from "../config/db.ts";
+import dbClient from "../shared/database/database.ts";
 
 const authRouter = new Router();
 
@@ -8,12 +8,12 @@ authRouter.post("/login", async (ctx) => {
   const { pseudo, password } = body;
 
   // 1. Chercher l'utilisateur dans la DB
-  const result = await dbClient.execute(
+  const result = await dbClient.query(
     "SELECT pseudo, role, isActive FROM APP_USER WHERE pseudo = ? AND password = ?",
     [pseudo, password],
   );
 
-  const user = result.rows?.[0];
+  const user = result;
 
   // 2. Vérification
   if (!user) {
