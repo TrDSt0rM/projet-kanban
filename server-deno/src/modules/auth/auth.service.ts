@@ -4,15 +4,13 @@
  * @version 1.0.0
  * @date 2026-03-11
  */
-import { UserRepository } from "../../shared/repositories/user.repository.ts";
 import { isUserEntity } from "../../shared/utils/typeguards.ts";
 import { APIException, APIErrorCode } from "../../shared/types/mod.ts";
 import { createJWT, hashPassword, verifyPassword } from "../../shared/utils/crypto.utils.ts";
 
 export class AuthService {
 
-    // Injection de dependance du repository utilisateur
-    constructor(private userRepo: UserRepository) {}
+    constructor() {};
 
     // connexion de l'utilisateur
     async login(pseudo: string, password: string) {
