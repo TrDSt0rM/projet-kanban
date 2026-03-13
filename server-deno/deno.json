@@ -1,7 +1,8 @@
 {
   "tasks": {
     "dev": "deno run --watch --allow-net --allow-read --allow-write --allow-env --allow-ffi main.ts",
-    "start": "deno run --allow-net --allow-read --allow-write main.ts"
+    "start": "deno run --allow-net --allow-read --allow-write main.ts",
+    "test": "deno test --allow-net --allow-env --allow-read"
   },
   "compilerOptions": {
     "lib": ["deno.ns", "deno.unstable", "dom"],
