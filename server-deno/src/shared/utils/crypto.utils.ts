@@ -2,7 +2,7 @@ import { randomBytes, scrypt } from "node:crypto";
 import { jwtVerify, SignJWT } from "@panva/jose";
 
 import { LoginPayload } from "../../modules/auth/auth.types.ts";
-import { isLoginPayload } from "../../modules/auth/auth.typeguads.ts";
+import { isLoginPayload } from "../../modules/auth/auth.typeguards.ts";
 
 const JWT_SECRET = "projet-kanban-SOR-SI-2026"; 
 const JWT_KEY = new TextEncoder().encode(JWT_SECRET);
