@@ -42,9 +42,15 @@ router.post("/login", async (ctx) => {
         ctx.response.body = responseBody;
 
     } catch (err) {
-        console.error(err);
-        throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Internal server error");
-    }
+        if (err instanceof APIException) {
+            ctx.response.status = err.status;
+            ctx.response.body = { success: false, error: { code: err.code, message: err.message } };
+        } else {
+            console.error(err);
+            ctx.response.status = 500;
+            ctx.response.body = { success: false, error: { code: APIErrorCode.INTERNAL_SERVER_ERROR, message: "Erreur serveur" } };
+        }
+}
 });
 
 /**
@@ -83,7 +89,13 @@ router.post("/register", async (ctx) => {
         ctx.response.body = responseBody;
 
     } catch (err) {
-        console.error(err);
-        throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Internal server error");
+        if (err instanceof APIException) {
+            ctx.response.status = err.status;
+            ctx.response.body = { success: false, error: { code: err.code, message: err.message } };
+        } else {
+            console.error(err);
+            ctx.response.status = 500;
+            ctx.response.body = { success: false, error: { code: APIErrorCode.INTERNAL_SERVER_ERROR, message: "Erreur serveur" } };
+        }
     }
 });
