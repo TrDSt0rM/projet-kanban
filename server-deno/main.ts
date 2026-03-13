@@ -2,6 +2,7 @@ import { Application, Router } from "@oak/oak";
 import { oakCors } from "@tajpouria/cors";
 import adminRouter from "./src/routes/admin.ts";
 import { router as authRouter } from "./src/modules/auth/auth.routes.ts";
+import { errorMiddleware } from "./src/shared/middlewares/error.middleware.ts";
 
 // ---------- HTTP Router --------------------------------
 
@@ -15,6 +16,8 @@ const PORT = 8000;
 const ADDRESS = `${PROTOCOL}://${HOSTNAME}:${PORT}`;
 
 const app = new Application();
+
+app.use(errorMiddleware);
 
 rootRouter.use(
   "/api/admin",

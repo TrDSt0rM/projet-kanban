@@ -21,7 +21,6 @@ export const router = new Router({ prefix: "/auth" });
  * Si les informations sont correctes, un token JWT est généré et renvoyé dans la réponse.
  */
 router.post("/login", async (ctx) => {
-    try {
         const body = await ctx.request.body.json();
         
         // typeguard
@@ -41,16 +40,6 @@ router.post("/login", async (ctx) => {
         ctx.response.status = 200;
         ctx.response.body = responseBody;
 
-    } catch (err) {
-        if (err instanceof APIException) {
-            ctx.response.status = err.status;
-            ctx.response.body = { success: false, error: { code: err.code, message: err.message } };
-        } else {
-            console.error(err);
-            ctx.response.status = 500;
-            ctx.response.body = { success: false, error: { code: APIErrorCode.INTERNAL_SERVER_ERROR, message: "Erreur serveur" } };
-        }
-}
 });
 
 /**
