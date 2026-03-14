@@ -1,6 +1,6 @@
 package com.example.servertomcat.repositories;
 
-// import com.example.servertomcat.entities.User;
+import com.example.servertomcat.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
