@@ -1,11 +1,9 @@
 package com.example.servertomcat.repositories;
 
-import com.example.servertomcat.entities.Column;
-import org.springframework.stereotype.Repository;
+import com.example.servertomcat.entities.BoardColumn;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ColumnRepository extends JpaRepository<Column, Long> {
-
+public interface ColumnRepository extends JpaRepository<BoardColumn, String> {
 }

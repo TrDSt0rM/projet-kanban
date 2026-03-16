@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BoardRepository extends JpaRepository<Board, Long> {
-    // Trouve les tableaux créés par l'utilisateur ou où il est membre
-    List<Board> findByOwnerIdOrMembersId(Long ownerId, Long memberId);
+public interface BoardRepository extends JpaRepository<Board, String> {
+    List<Board> findByOwnerPseudoOrMembersPseudo(String ownerPseudo, String memberPseudo);
 }

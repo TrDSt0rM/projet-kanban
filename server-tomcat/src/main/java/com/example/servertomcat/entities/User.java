@@ -1,8 +1,12 @@
 package com.example.servertomcat.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Setter
+@Getter
 @Table(name = "APP_USER")
 public class User {
     @Id
@@ -17,4 +21,5 @@ public class User {
 
     @Column(name = "isActive")
     private boolean isActive = true;
+
 }

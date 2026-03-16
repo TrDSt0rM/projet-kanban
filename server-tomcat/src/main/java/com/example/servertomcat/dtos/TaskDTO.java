@@ -1,6 +1,8 @@
 package com.example.servertomcat.dtos;
+
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TaskDTO {
@@ -12,4 +14,5 @@ public class TaskDTO {
     private LocalDate limitDate;
     private String assignedToPseudo;
     private String columnId;
+    private List<CommentDTO> comments;
 }
