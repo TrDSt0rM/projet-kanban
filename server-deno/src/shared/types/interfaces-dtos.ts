@@ -6,7 +6,7 @@
  */
 
 /** =================================================
- * Interface Authentication
+ * Interface User
  ================================================= */
 export interface UserDto {
     pseudo: string;
@@ -14,22 +14,9 @@ export interface UserDto {
     isActive: boolean;
 }
 
-export interface LoginDto {
-    pseudo: string;
-    password: string;
-}
-
-export interface LoginResponseDto {
-    token: string;
-    user: {
-        pseudo: string;
-        role: string;
-    };
-}
-
-export interface RegisterDto {
-    pseudo: string;
-    password: string;
+export interface UpdateUserRequest {
+    role?: string;
+    isActive?: boolean;
 }
 
 /** =================================================
@@ -40,13 +27,21 @@ export interface BoardDto {
     name: string;
     owner: string;
     members: string[];
-    columns: ColumnDto[];
+    columns: BoardColumnDto[];
 }
 
-export interface ColumnDto {
+export interface CreateBoardRequest {
+    name: string;
+}
+
+export interface UpdateBoardRequest {
+    name?: string;
+}
+
+export interface BoardColumnDto {
     id: string;
     name: string;
-    order: number;
+    position: number;
     tasks: TaskDto[];
 }
 
@@ -54,11 +49,10 @@ export interface TaskDto {
     id: string;
     title: string;
     description: string;
-    assignedTo: string;
-    order: number;
+    position: number;
     priority: string;
-    expectedCompletionDate: string;
-    status: string;
+    expectedCompletionDate?: string;
+    assignedTo?: string;
 }
 
 export interface CommentDtos {
