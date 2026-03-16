@@ -35,7 +35,7 @@ CREATE TABLE `BOARD` (
 CREATE TABLE `BOARD_COLUMN` (
                                 `id_column` char(36) NOT NULL DEFAULT (UUID()),
                                 `name` varchar(100) NOT NULL,
-                                `order` int(11) NOT NULL,
+                                `position` int(11) NOT NULL,
                                 `id_board` char(36) NOT NULL,
                                 PRIMARY KEY (`id_column`),
                                 KEY `id_board` (`id_board`),
@@ -47,7 +47,7 @@ CREATE TABLE `TASK` (
                         `id_task` char(36) NOT NULL DEFAULT (UUID()),
                         `name` varchar(100) NOT NULL,
                         `description` text DEFAULT NULL,
-                        `order` int(11) NOT NULL,
+                        `position` int(11) NOT NULL,
                         `priority` int(11) DEFAULT NULL,
                         `limit_date` date DEFAULT NULL,
                         `pseudo` varchar(50) DEFAULT NULL,
