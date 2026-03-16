@@ -2,6 +2,8 @@ import { Application, Router } from "@oak/oak";
 import { oakCors } from "@tajpouria/cors";
 import adminRouter from "./src/routes/admin.ts";
 import { router as authRouter } from "./src/modules/auth/auth.routes.ts";
+import { router as boardRouter } from "./src/modules/board/board.routes.ts"
+import { router as userRouter } from "./src/modules/user/user.routes.ts"
 import { errorMiddleware } from "./src/shared/middlewares/error.middleware.ts";
 
 // ---------- HTTP Router --------------------------------
@@ -28,6 +30,8 @@ rootRouter.use(
 app.use(oakCors());
 app.use(rootRouter.routes(), rootRouter.allowedMethods());
 app.use(authRouter.routes(), authRouter.allowedMethods());
+app.use(boardRouter.routes(), boardRouter.allowedMethods());
+app.use(userRouter.routes(), userRouter.allowedMethods());
 
 app.addEventListener("listen", () => {
   console.log(`Server backend Deno (Sécurité) listening on ${ADDRESS}`);
