@@ -28,6 +28,12 @@ public class TaskService {
         return convertToFullDTO(task, comments);
     }
 
+    /**
+     * Convertit une tâche et ses commentaires en DTO complet.
+     * @param task La tâche à convertir
+     * @param comments Les commentaires associés
+     * @return Le DTO complet
+     */
     private TaskDTO convertToFullDTO(Task task, List<Comment> comments) {
         TaskDTO dto = new TaskDTO();
         dto.setId(task.getId());
