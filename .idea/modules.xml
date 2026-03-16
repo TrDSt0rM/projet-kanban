@@ -5,6 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/frontend-kanban/frontend-kanban.iml" filepath="$PROJECT_DIR$/frontend-kanban/frontend-kanban.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/projet-kanban.iml" filepath="$PROJECT_DIR$/.idea/projet-kanban.iml" />
       <module fileurl="file://$PROJECT_DIR$/server-deno/server-deno.iml" filepath="$PROJECT_DIR$/server-deno/server-deno.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/server-tomcat.main.iml" filepath="$PROJECT_DIR$/.idea/modules/server-tomcat.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/server-tomcat.test.iml" filepath="$PROJECT_DIR$/.idea/modules/server-tomcat.test.iml" />
     </modules>
   </component>
 </project>

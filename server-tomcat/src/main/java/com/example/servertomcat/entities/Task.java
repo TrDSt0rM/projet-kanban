@@ -1,19 +1,21 @@
 package com.example.servertomcat.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "TASK")
+@Getter
+@Setter
 public class Task {
     @Id
     @Column(name = "id_task", length = 36)
-    private String id; // UUID
+    private String id;
 
-    @Column(nullable = false, length = 100)
     private String name;
-
-    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "`order`", nullable = false)
