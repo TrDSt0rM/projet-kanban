@@ -5,8 +5,10 @@
  * @date 2026-03-11
  */
 import { isUserEntity } from "../../shared/utils/typeguards.ts";
+import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import { APIException, APIErrorCode } from "../../shared/types/mod.ts";
 import { createJWT, hashPassword, verifyPassword } from "../../shared/utils/crypto.utils.ts";
+import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 
 export class AuthService {
 
@@ -16,7 +18,7 @@ export class AuthService {
     async login(pseudo: string, password: string) {
 
         // recupération de l'utilisateur en base de données
-        const response = await fetch(`http://localhost:8080/api/users/${pseudo}`);
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/users/${pseudo}`);
 
         if (!response.ok) {
             throw new APIException(APIErrorCode.NOT_FOUND, 404, "Utilisateur inconnu");
@@ -54,19 +56,15 @@ export class AuthService {
 
     async register(pseudo: string, password: string) {
         
+        // hachage du mot de passe avant enregistrement
         const hashedPassword = await hashPassword(password);
 
-        const body = {
-            pseudo: pseudo,
-            password: hashedPassword,
-        }
-
-        const response = await fetch(`http://localhost:8080/api/users`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/users`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(body)
+            body: JSON.stringify({pseudo, password: hashedPassword}),
         });
 
         if (!response.ok) {
