@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
 public class Comment {
     @Id
     private String id;
-
-    private Long taskId;
+    private String taskId;
     private String content;
     private String authorPseudo;
     private LocalDateTime createdAt;
