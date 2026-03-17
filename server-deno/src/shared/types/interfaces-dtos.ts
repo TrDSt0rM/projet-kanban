@@ -38,6 +38,11 @@ export interface UpdateBoardRequest {
     name?: string;
 }
 
+export interface BoardMemberDto {
+    pseudo: string;
+    role: string;
+}
+
 export interface BoardColumnDto {
     id: string;
     name: string;

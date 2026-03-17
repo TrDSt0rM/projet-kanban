@@ -7,8 +7,11 @@
 import { Router } from "@oak/oak";
 import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { boardService } from "../../shared/container.ts";
-import { APIException, APIErrorCode, APIResponse, BoardDto } from "../../shared/types/mod.ts";
 import { isCreateBoardRequest, isUpdateBoardRequest } from "../../shared/utils/typeguards.ts";
+import { 
+    APIException, APIErrorCode, APIResponse, 
+    BoardDto, BoardMemberDto 
+} from "../../shared/types/mod.ts";
 
 export const router = new Router({ prefix: "/boards" });
 
@@ -16,18 +19,20 @@ router.use(authMiddleware);
 
 /**
  * Récupère tous les tableau d'un utilisateur à partir de son pseudo (propriétaire ou collaborateur)
- * @route GET /boards/:userPseudo
- * @param userPseudo le pseudo de l'utilisateur propriétaire du tableau
+ * @route GET /boards
+ * @param pseudo le pseudo de l'utilisateur dont on veut récupérer les tableaux
  * @returns les tableaux correspondant au pseudo de l'utilisateur
  * @throws 404 si aucun tableau ne correspond au pseudo de l'utilisateur
  * @throws 500 si une erreur interne se produit lors de la récupération du tableau depuis Tomcat
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardDto
  */
-router.get("/:userPseudo", async (ctx) => {
+router.get("/", async (ctx) => {
 
     // Récupération du pseudo depuis les paramètres de l'URL
-    const userPseudo = ctx.params.userPseudo!;
-
+    const userPseudo = ctx.state.user?.pseudo;
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
     // Récupération des tableaux depuis le service avec le pseudo de l'utilisateur
     const boards = await boardService.getBoardByPseudo(userPseudo);
 
@@ -98,8 +103,8 @@ router.post("/", async (ctx) => {
     ctx.response.body = responseBody;
 });
 
-router.put("/:boardId", async (ctx) => {
-    const boardId = ctx.params.boardId!;
+router.put("/:id", async (ctx) => {
+    const boardId = ctx.params.id!;
     const userPseudo = ctx.state.user?.pseudo;
     const updateBoardRequest = await ctx.request.body.json();
 
@@ -122,9 +127,19 @@ router.put("/:boardId", async (ctx) => {
     ctx.response.body = responseBody;
 });
 
-router.delete("/:boardId", async (ctx) => {
+/**
+ * Supprime un tableau à partir de son id. Seul le propriétaire du tableau peut supprimer le tableau.
+ * @route DELETE /boards/:id
+ * @param id l'id du tableau à supprimer
+ * @returns null si la suppression a réussi, sinon lance une APIException avec un message d'erreur approprié
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas le propriétaire du tableau
+ * @throws 500 si une erreur interne se produit lors de la suppression du tableau dans Tomcat
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardDto
+ */
+router.delete("/:id", async (ctx) => {
 
-    const boardId = ctx.params.boardId!;
+    const boardId = ctx.params.id!;
     const userPseudo = ctx.state.user?.pseudo;
 
     // Vérification que le pseudo de l'utilisateur est présent dans le contexte
@@ -140,7 +155,7 @@ router.delete("/:boardId", async (ctx) => {
         throw new APIException(APIErrorCode.FORBIDDEN, 403, "Seul le propriétaire du tableau peut le supprimer");
     }
 
-    boardService.deleteBoard(boardId);
+    await boardService.deleteBoard(boardId);
 
     const responseBody : APIResponse<null> = {
         success: true,
@@ -149,3 +164,57 @@ router.delete("/:boardId", async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
+
+/**
+ * Récupère les membres d'un tableau à partir de l'id du tableau
+ * @route GET /boards/:id/members
+ * @param id l'id du tableau dont on veut récupérer les membres
+ * @returns les membres du tableau correspondant à l'id
+ * @throws 404 si aucun tableau ne correspond à l'id
+ * @throws 500 si une erreur interne se produit lors de la récupération des membres depuis Tomcat
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardMemberDto
+ */
+router.get("/:id/members", async (ctx) => {
+    const boardId = ctx.params.id!;
+    
+    const members = await boardService.getBoardMembers(boardId);
+
+    const responseBody : APIResponse<BoardMemberDto[]> = {
+        success: true,
+        data: members,
+    };
+
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
+/**
+ * Supprime un membre d'un tableau à partir de l'id du tableau et du pseudo de l'utilisateur à supprimer. Seul le propriétaire du tableau peut supprimer un membre.
+ * @route DELETE /boards/:id/members/:userPseudo
+ * @param id l'id du tableau dont on veut supprimer un membre
+ * @param userPseudo le pseudo de l'utilisateur à supprimer du tableau
+ * @returns null si la suppression a réussi, sinon lance une APIException avec un message d'erreur approprié
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas le propriétaire du tableau
+ * @throws 500 si une erreur interne se produit lors de la suppression du membre dans Tomcat
+ */
+router.delete("/:id/members/:userPseudo", async (ctx) => {
+    const boardId = ctx.params.id!;
+    const userPseudo = ctx.params.userPseudo!;
+
+    // check si l'utilsateur est le propriétaire du tableau
+    const board = await boardService.getBoardById(boardId);
+    if (board.owner !== ctx.state.user.pseudo) {
+        throw new APIException(APIErrorCode.FORBIDDEN, 403, "Seul le propriétaire du tableau peut supprimer un membre");
+    }
+
+    await boardService.removeBoardMember(boardId, userPseudo);
+    
+    const responseBody : APIResponse<null> = {
+        success: true,
+        data: null,
+    };
+
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});    

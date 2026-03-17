@@ -5,8 +5,8 @@
  * @date 2026-03-16
  */
 import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
-import { APIErrorCode, APIException, BoardDto, CreateBoardRequest } from "../../shared/types/mod.ts";
-import { isBoardDto } from "../../shared/utils/typeguards.ts";
+import { APIErrorCode, APIException, BoardDto, CreateBoardRequest, BoardMemberDto } from "../../shared/types/mod.ts";
+import { isBoardDto, isBoardMemberDto } from "../../shared/utils/typeguards.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 
 export class BoardService {
@@ -120,6 +120,34 @@ export class BoardService {
 
         if (!response.ok) {
             throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de la suppression du tableau");
+        }
+
+        return true;
+    }
+
+    async getBoardMembers(id: string) {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${id}/members`);
+        
+        if (!response.ok) {
+            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de la récupération des membres du tableau");
+        }
+
+        const members: BoardMemberDto[] = await response.json();
+
+        if(!members || members.every(isBoardMemberDto)){
+            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Données tomcat membres du tableau invalides");
+        }
+
+        return members;
+    }
+
+    async removeBoardMember(boardId: string, memberPseudo: string) {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/members/${memberPseudo}`, {
+            method: "DELETE",
+        });
+
+        if (!response.ok) {
+            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de la suppression du membre du tableau");
         }
 
         return true;
