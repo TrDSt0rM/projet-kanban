@@ -23,7 +23,7 @@ public class Board {
 
     @ManyToMany
     @JoinTable(
-            name = "BOARD_MEMBERS",
+            name = "BOARD_MEMBER",
             joinColumns = @JoinColumn(name = "id_board"),
             inverseJoinColumns = @JoinColumn(name = "pseudo")
     )

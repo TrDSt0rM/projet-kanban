@@ -15,7 +15,6 @@ public class User {
     private String pseudo;
 
     @Column(nullable = false)
-    @JsonIgnore
     private String password;
 
     @Column(length = 20, nullable = false)
