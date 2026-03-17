@@ -33,4 +33,5 @@ export enum APIErrorCode {
   VOTE_ERROR = "VoteError",
   BAD_REQUEST = "BadRequest",
   INTERNAL_SERVER_ERROR = "InternalServerError",
+  CONFLICT = "Conflict",
 }

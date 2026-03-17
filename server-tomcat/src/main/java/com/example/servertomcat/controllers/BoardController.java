@@ -58,7 +58,7 @@ public class BoardController {
     }
 
     @DeleteMapping("/{boardId}/members/{memberPseudo}")
-    public ResponseEntity<Void> deleteBoardMember(@PathVariable String boardId, String memberPseudo)  {
+    public ResponseEntity<Void> deleteBoardMember(@PathVariable String boardId, @PathVariable String memberPseudo)  {
         boolean removed = boardService.removeBoardMember(boardId, memberPseudo);
         if (!removed) {
             return ResponseEntity.notFound().build();

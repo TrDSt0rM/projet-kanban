@@ -86,11 +86,10 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      throw new APIException(
-        APIErrorCode.BAD_REQUEST,
-        400,
-        "Échec de l'enregistrement",
-      );
+        if (response.status === 409) {
+            throw new APIException(APIErrorCode.CONFLICT, 409, "Ce pseudo est déjà utilisé");
+        }
+        throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Échec de l'enregistrement");
     }
 
     return true;
