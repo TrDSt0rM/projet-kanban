@@ -103,6 +103,18 @@ router.post("/", async (ctx) => {
     ctx.response.body = responseBody;
 });
 
+/**
+ * Modifie un tableau à partir de son id. Seul le propriétaire du tableau peut modifier le tableau.
+ * @route PUT /boards/:id
+ * @param id l'id du tableau à modifier
+ * @param request les données de la requête de modification du tableau
+ * @returns le tableau modifié si la modification a réussi, sinon lance une APIException avec un message d'erreur approprié
+ * @throws 400 si les données de modification du tableau sont invalides
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas le propriétaire du tableau
+ * @throws 500 si une erreur interne se produit lors de la modification du tableau dans Tomcat
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardDto
+ */
 router.put("/:id", async (ctx) => {
     const boardId = ctx.params.id!;
     const userPseudo = ctx.state.user?.pseudo;

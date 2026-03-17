@@ -64,7 +64,7 @@ export class BoardService {
         const newBoard: BoardDto = {
             id: boardId,
             name: request.name,
-            owner: owner,
+            ownerPseudo: owner,
             members: [owner],
             columns: [],
         }

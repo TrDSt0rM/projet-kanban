@@ -25,7 +25,7 @@ export interface UpdateUserRequest {
 export interface BoardDto {
     id: string;
     name: string;
-    owner: string;
+    ownerPseudo: string;
     members: string[];
     columns: BoardColumnDto[];
 }
