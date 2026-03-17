@@ -4,16 +4,28 @@ import { Home } from "./pages/Home.tsx";
 import { Login } from "./pages/Login.tsx";
 import { Register } from "./pages/Register.tsx";
 import { Dashboard } from "./pages/Dashboard.tsx";
+import { CreateBoard } from "./pages/CreateBoard.tsx";
+import { Profile } from "./pages/Profile.tsx";
 
 export interface User {
   pseudo: string;
   role: "ADMIN" | "USER" | "MANAGER";
+  token: string;
 }
 
 function App() {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("kanban_user");
-    return saved ? JSON.parse(saved) : null;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (!parsed.token) return null;
+        return parsed;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   });
 
   const handleLogin = (loggedUser: User) => {
@@ -42,7 +54,25 @@ function App() {
           path="/dashboard"
           element={
             user ? (
-              <Dashboard boards={[]} user={user} onLogout={handleLogout} />
+              <Dashboard user={user} onLogout={handleLogout} boards={[]} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+
+        <Route
+          path="/dashboard/new"
+          element={
+            user ? <CreateBoard user={user} /> : <Navigate to="/login" />
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            user ? (
+              <Profile user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )

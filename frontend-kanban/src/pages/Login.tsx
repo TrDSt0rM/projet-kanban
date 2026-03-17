@@ -31,7 +31,13 @@ export function Login({ onLogin, user }: LoginProps) {
       const result = await response.json();
 
       if (response.ok) {
-        onLogin(result.data.user);
+        // CORRECTIF : On fusionne l'user et le token pour App.tsx
+        const userWithToken: User = {
+          ...result.data.user,
+          token: result.data.token, // On récupère le token au bon endroit
+        };
+
+        onLogin(userWithToken);
         navigate("/dashboard");
       } else {
         alert(result.error?.message || "Identifiants incorrects.");
@@ -49,12 +55,14 @@ export function Login({ onLogin, user }: LoginProps) {
         onSubmit={handleSubmit}
         className="p-8 bg-white shadow-xl rounded-xl w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold mb-8 text-center">Connexion</h2>
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
+          Connexion
+        </h2>
         <div className="space-y-4">
           <input
             type="text"
             placeholder="Pseudo"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             value={pseudo}
             onChange={(e) => setPseudo(e.target.value)}
             required
@@ -62,7 +70,7 @@ export function Login({ onLogin, user }: LoginProps) {
           <input
             type="password"
             placeholder="Mot de passe"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -70,14 +78,17 @@ export function Login({ onLogin, user }: LoginProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold"
+            className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {isLoading ? "Chargement..." : "Se connecter"}
+            {isLoading ? "Connexion en cours..." : "Se connecter"}
           </button>
         </div>
-        <p className="mt-4 text-center text-sm">
+        <p className="mt-4 text-center text-sm text-gray-600">
           Pas de compte ?{" "}
-          <Link to="/register" className="text-blue-600 font-bold">
+          <Link
+            to="/register"
+            className="text-blue-600 font-bold hover:underline"
+          >
             S'inscrire
           </Link>
         </p>
