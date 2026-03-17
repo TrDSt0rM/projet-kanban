@@ -14,7 +14,7 @@ export class BoardService {
     constructor() {}
 
     async getBoardById(id: string) {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${id}`);
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/user/${id}`);
         
         if (!response.ok) {
             if (response.status === 404) {

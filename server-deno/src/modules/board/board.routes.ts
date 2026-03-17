@@ -163,7 +163,7 @@ router.delete("/:id", async (ctx) => {
     const board = await boardService.getBoardById(boardId);
 
     //contrôle que le pseudo de l'utilisateur correspond au propriétaire du tableau
-    if (board.owner !== userPseudo) {
+    if (board.ownerPseudo !== userPseudo) {
         throw new APIException(APIErrorCode.FORBIDDEN, 403, "Seul le propriétaire du tableau peut le supprimer");
     }
 
@@ -216,7 +216,7 @@ router.delete("/:id/members/:userPseudo", async (ctx) => {
 
     // check si l'utilsateur est le propriétaire du tableau
     const board = await boardService.getBoardById(boardId);
-    if (board.owner !== ctx.state.user.pseudo) {
+    if (board.ownerPseudo !== ctx.state.user.pseudo) {
         throw new APIException(APIErrorCode.FORBIDDEN, 403, "Seul le propriétaire du tableau peut supprimer un membre");
     }
 

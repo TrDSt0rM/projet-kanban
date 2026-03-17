@@ -19,7 +19,7 @@ public class BoardController {
     @Autowired
     private BoardService boardService;
 
-    @GetMapping("/{pseudo}")
+    @GetMapping("/user/{pseudo}")
     public ResponseEntity<List<BoardDTO>> getUserBoards(@PathVariable String pseudo) {
         List<BoardDTO> boards = boardService.getBoardsForUser(pseudo);
         if (boards.isEmpty()) {
