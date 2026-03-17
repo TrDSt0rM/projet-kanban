@@ -1,5 +1,6 @@
 package com.example.servertomcat.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,7 @@ public class User {
     private String pseudo;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(length = 20, nullable = false)

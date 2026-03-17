@@ -7,5 +7,6 @@ import java.util.List;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, String> {
+    List<Board> findByOwnerPseudo(String pseudo);
     List<Board> findByOwnerPseudoOrMembersPseudo(String ownerPseudo, String memberPseudo);
 }

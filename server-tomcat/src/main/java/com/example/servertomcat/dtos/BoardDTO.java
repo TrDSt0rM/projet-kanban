@@ -7,5 +7,6 @@ import java.util.List;
 public class BoardDTO {
     private String id;
     private String name;
+    private String owner;
     private List<BoardColumnDTO> columns;
 }
