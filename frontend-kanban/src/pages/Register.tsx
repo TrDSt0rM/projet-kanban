@@ -1,43 +1,32 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router";
-import { User } from "../App";
 
-interface LoginProps {
-  onLogin: (user: User) => void;
-  user: User | null;
-}
-
-export function Login({ onLogin, user }: LoginProps) {
-  const [pseudo, setPseudo] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+export function Register() {
+  const [pseudo, setPseudo] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user) navigate("/dashboard");
-  }, [user, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/auth/login`, {
+      const response = await fetch(`http://localhost:8000/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pseudo, password }),
       });
 
-      const result = await response.json();
-
       if (response.ok) {
-        onLogin(result.data.user);
-        navigate("/dashboard");
+        alert("Compte créé ! Connectez-vous.");
+        navigate("/login");
       } else {
-        alert(result.error?.message || "Identifiants incorrects.");
+        const err = await response.json();
+        alert(err.error?.message || "Erreur lors de l'inscription.");
       }
-    } catch (error) {
-      alert("Le serveur Deno est injoignable.");
+    } catch {
+      alert("Erreur serveur.");
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +38,9 @@ export function Login({ onLogin, user }: LoginProps) {
         onSubmit={handleSubmit}
         className="p-8 bg-white shadow-xl rounded-xl w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold mb-8 text-center">Connexion</h2>
+        <h2 className="text-3xl font-bold mb-8 text-center text-green-600">
+          Inscription
+        </h2>
         <div className="space-y-4">
           <input
             type="text"
@@ -70,15 +61,15 @@ export function Login({ onLogin, user }: LoginProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold"
+            className="w-full py-3 bg-green-600 text-white rounded-lg font-bold"
           >
-            {isLoading ? "Chargement..." : "Se connecter"}
+            {isLoading ? "Création..." : "Créer mon compte"}
           </button>
         </div>
         <p className="mt-4 text-center text-sm">
-          Pas de compte ?{" "}
-          <Link to="/register" className="text-blue-600 font-bold">
-            S'inscrire
+          Déjà inscrit ?{" "}
+          <Link to="/login" className="text-blue-600 font-bold">
+            Se connecter
           </Link>
         </p>
       </form>

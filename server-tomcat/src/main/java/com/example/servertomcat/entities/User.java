@@ -1,6 +1,7 @@
 package com.example.servertomcat.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ public class User {
     private String role = "USER";
 
     @Column(name = "isActive")
+    @JsonProperty("isActive")
     private boolean isActive = true;
 
 }

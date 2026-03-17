@@ -4,14 +4,15 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ShieldCheck, Plus } from "lucide-react";
+import { ShieldCheck, Plus, LogOut } from "lucide-react";
 import { User } from "@/App";
 
 interface NavbarProps {
   user: User | null;
+  onLogout?: () => void;
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({ user, onLogout }: NavbarProps) {
   const navButtonStyle =
     "flex items-center gap-2 px-4 py-1.5 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200";
 
@@ -34,6 +35,8 @@ export function Navbar({ user }: NavbarProps) {
                 <span className="text-sm font-semibold">Nouveau Tableau</span>
               </button>
             </NavigationMenuItem>
+
+            {/* Affichage conditionnel pour l'Admin */}
             {user?.role === "ADMIN" && (
               <NavigationMenuItem>
                 <button
@@ -51,7 +54,7 @@ export function Navbar({ user }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-4 px-2">
-        <div className="flex flex-col items-end sm:flex">
+        <div className="flex flex-col items-end">
           <span className="text-xs font-bold text-gray-800 leading-none">
             {user?.pseudo || "Invité"}
           </span>
@@ -61,11 +64,24 @@ export function Navbar({ user }: NavbarProps) {
         </div>
 
         <Avatar className="h-9 w-9 border-2 border-white shadow-md ring-1 ring-gray-100">
-          <AvatarImage src="https://github.com/shadcn.png" alt="Profil" />
+          <AvatarImage
+            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.pseudo}`}
+            alt="Profil"
+          />
           <AvatarFallback className="bg-blue-100 text-blue-600 font-bold">
             {user?.pseudo?.charAt(0).toUpperCase() || "?"}
           </AvatarFallback>
         </Avatar>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+            title="Déconnexion"
+          >
+            <LogOut className="size-5" />
+          </button>
+        )}
       </div>
     </nav>
   );
