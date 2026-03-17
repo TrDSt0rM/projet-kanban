@@ -14,9 +14,10 @@ public class BoardColumn {
     @Column(name = "id_column", length = 36)
     private String id;
 
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "position")
+    @Column(name = "position", nullable = false)
     private int position;
 
     @ManyToOne

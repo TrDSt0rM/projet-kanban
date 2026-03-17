@@ -1,10 +1,11 @@
 package com.example.servertomcat.dtos;
 
+import com.example.servertomcat.enums.RoleUser;
 import lombok.Data;
 
 @Data
 public class UserDTO {
     private String pseudo;
-    private String role;
+    private RoleUser role;
     private boolean isActive;
 }

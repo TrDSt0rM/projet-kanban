@@ -1,9 +1,11 @@
 package com.example.servertomcat.entities;
 
+import com.example.servertomcat.enums.RoleMember;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,18 +19,17 @@ public class Board {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "pseudo_owner")
-    private User owner;
-
-    @ManyToMany
-    @JoinTable(
-            name = "BOARD_MEMBER",
-            joinColumns = @JoinColumn(name = "id_board"),
-            inverseJoinColumns = @JoinColumn(name = "pseudo")
-    )
-    private List<User> members;
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BoardMember> members = new ArrayList<>();
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
-    private List<BoardColumn> columns;
+    private List<BoardColumn> columns = new ArrayList<>();
+
+    public User getOwner(){
+        return members.stream()
+                .filter(m -> m.getRole() == RoleMember.OWNER)
+                .map(BoardMember::getUser)
+                .findFirst()
+                .orElse(null);
+    }
 }
