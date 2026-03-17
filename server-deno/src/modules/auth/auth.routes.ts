@@ -1,8 +1,8 @@
 import { Router } from "@oak/oak";
-import { isLoginDto, isRegisterDto } from "../../shared/utils/typeguards.ts";
 import { authService } from "../../shared/container.ts"
 import { APIErrorCode, APIException, APIResponse } from "../../shared/types/mod.ts";
 import { LoginResponseDto } from "./auth.types.ts";
+import { isLoginDto, isRegisterDto } from "./auth.typeguards.ts";
 
 export const router = new Router({ prefix: "/auth" });
 
@@ -57,7 +57,6 @@ router.post("/register", async (ctx) => {
         const body = await ctx.request.body.json();
 
         // typeguard
-
         if (!isRegisterDto(body)){
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Invalid request body");
         }

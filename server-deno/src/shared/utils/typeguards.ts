@@ -8,7 +8,7 @@ import {
   SQLOutputValue, 
   UserDto, UserEntity, UpdateUserRequest,
   BoardColumnDto, TaskDto,
-  BoardDto, CreateBoardRequest, UpdateBoardRequest 
+  BoardDto, CreateBoardRequest, UpdateBoardRequest, BoardMemberDto,
 } from "../types/mod.ts";
 import { LoginDto, RegisterDto } from "../../modules/auth/auth.types.ts";
 
@@ -40,7 +40,7 @@ export function isUserEntity(obj: Record<string, SQLOutputValue>): obj is UserEn
     "pseudo" in obj && typeof obj.pseudo === "string" &&
     "password" in obj && typeof obj.password === "string" &&
     "role" in obj && typeof obj.role === "string" &&
-    "isActive" in obj && typeof obj.isActive === "number";
+    "isActive" in obj && typeof obj.isActive === "boolean";
 }
 
 /* ==================================================
@@ -62,6 +62,12 @@ export function isCreateBoardRequest(obj: unknown): obj is CreateBoardRequest {
 export function isUpdateBoardRequest(obj: unknown): obj is UpdateBoardRequest {
   return !!obj && typeof obj === "object" 
     && ("name" in obj ? typeof obj.name === "string" : true);
+}
+
+export function isBoardMemberDto(obj: unknown): obj is BoardMemberDto {
+  return !!obj && typeof obj === "object" &&
+    "pseudo" in obj && typeof obj.pseudo === "string" &&
+    "role" in obj && typeof obj.role === "string";
 }
 
 /* ==================================================

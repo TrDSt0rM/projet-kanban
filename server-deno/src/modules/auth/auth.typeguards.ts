@@ -18,3 +18,10 @@ export function isLoginPayload(obj: unknown): obj is LoginPayload {
     "role" in obj && typeof obj.role === "string" &&
     "exp" in obj && typeof obj.exp === "number";
 }
+
+export function isRegisterDto(obj: unknown): obj is LoginDto {
+  return !!obj && typeof obj === "object" &&
+    "pseudo" in obj && typeof obj.pseudo === "string" &&
+    "password" in obj && typeof obj.password === "string";
+}
+
