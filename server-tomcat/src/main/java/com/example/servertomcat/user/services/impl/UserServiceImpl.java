@@ -59,6 +59,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updatePassword(String userPseudo, String newPassword) {
         User user = findUserByPseudo(userPseudo);
+        if (newPassword.equals(user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Vous ne pouvez pas utilisé le même mot de passe");
+        }
+        if (newPassword.length() < 6){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le mot de passe doit contenir au moins 6 caractères");
+        }
         user.setPassword(newPassword);
         userRepository.save(user);
     }
@@ -84,15 +90,6 @@ public class UserServiceImpl implements UserService {
         User user = findUserByPseudo(userPseudo);
         user.setActive(!user.isActive());
         userRepository.save(user);
-    }
-
-    @Override
-    public void deleteUserAdmin(String userPseudo) {
-        if (!userRepository.existsById(userPseudo)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Utilisateur introuvable");
-        }
-        userRepository.deleteById(userPseudo);
     }
 
     // Méthode privée pour éviter la duplication du findById + orElseThrow

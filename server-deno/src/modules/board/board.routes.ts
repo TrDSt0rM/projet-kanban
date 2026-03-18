@@ -7,10 +7,9 @@
 import { Router } from "@oak/oak";
 import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { boardService } from "../../shared/container.ts";
-import { isCreateBoardRequest, isUpdateBoardRequest } from "../../shared/utils/typeguards.ts";
 import { 
     APIException, APIErrorCode, APIResponse, 
-    BoardDto, BoardMemberDto 
+    BoardDetailDto, BoardMemberDto, BoardSummaryDto
 } from "../../shared/types/mod.ts";
 
 export const router = new Router({ prefix: "/boards" });
@@ -24,7 +23,7 @@ router.use(authMiddleware);
  * @returns les tableaux correspondant au pseudo de l'utilisateur
  * @throws 404 si aucun tableau ne correspond au pseudo de l'utilisateur
  * @throws 500 si une erreur interne se produit lors de la récupération du tableau depuis Tomcat
- * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardDto
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardSummaryDto
  */
 router.get("/", async (ctx) => {
 
@@ -37,7 +36,7 @@ router.get("/", async (ctx) => {
     const boards = await boardService.getBoardByPseudo(userPseudo);
 
     // Construction de la réponse
-    const responseBody : APIResponse<BoardDto[]> = {
+    const responseBody : APIResponse<BoardSummaryDto[]> = {
         success: true,
         data: boards,
     }
@@ -60,7 +59,7 @@ router.get("/:boardId", async (ctx) => {
     const boardId = ctx.params.boardId!;
     const board = await boardService.getBoardById(boardId);
 
-    const responseBody : APIResponse<BoardDto> = {
+    const responseBody : APIResponse<BoardDetailDto> = {
         success: true,
         data: board,
     }
@@ -81,9 +80,6 @@ router.get("/:boardId", async (ctx) => {
 router.post("/", async (ctx) => {
     // Récupération des données de la requête
     const createdBoardRequest = await ctx.request.body.json();
-    if(! isCreateBoardRequest(createdBoardRequest)){
-        throw new APIException(APIErrorCode.VALIDATION_ERROR, 400, "Données de création de tableau invalides");
-    }
 
     // Vérification que le pseudo de l'utilisateur est présent dans le contexte
     const userPseudo = ctx.state.user?.pseudo;
@@ -95,7 +91,7 @@ router.post("/", async (ctx) => {
     const createdBoard = await boardService.createBoard(createdBoardRequest, userPseudo);
 
     // Création de la réponse avec le tableau créé
-    const responseBody : APIResponse<BoardDto> = {
+    const responseBody : APIResponse<BoardSummaryDto> = {
         success: true,
         data: createdBoard,
     };
@@ -120,21 +116,20 @@ router.put("/:id", async (ctx) => {
     const userPseudo = ctx.state.user?.pseudo;
     const updateBoardRequest = await ctx.request.body.json();
 
+    // Verifie si le token est valide et contient un pseudo d'utilisateur
     if (!userPseudo) {
         throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
     }
 
-    if (!isUpdateBoardRequest(updateBoardRequest)) {
-        throw new APIException(APIErrorCode.VALIDATION_ERROR, 422, "Données de mise à jour de tableau invalides");
-    }
+    // Modification du tableau en utilisant le service de tableau et récupération du tableau modifié
+    const response = await boardService.modifyBoard(boardId, updateBoardRequest, userPseudo);
 
-    const response = await boardService.modifyBoard(boardId);
-
-    const responseBody : APIResponse<BoardDto> = {
+    // Création de la réponse avec le tableau modifié
+    const responseBody : APIResponse<BoardSummaryDto> = {
         success: true,
         data: response,
     };
-    
+
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
@@ -159,16 +154,19 @@ router.delete("/:id", async (ctx) => {
         throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
     }
 
-    // Récupération du board depuis le service avec l'id du tableau
-    const board = await boardService.getBoardById(boardId);
+    // Suppression du tableau en utilisant le service de tableau et récupération du résultat de la suppression
+    const result = await boardService.deleteBoard(boardId, userPseudo);
 
-    //contrôle que le pseudo de l'utilisateur correspond au propriétaire du tableau
-    if (board.ownerPseudo !== userPseudo) {
-        throw new APIException(APIErrorCode.FORBIDDEN, 403, "Seul le propriétaire du tableau peut le supprimer");
+    // Verifie si la suppression a réussi
+    if (!result) {
+        throw new APIException(
+            APIErrorCode.INTERNAL_SERVER_ERROR,
+            500,
+            "Erreur lors de la suppression du tableau",
+        );
     }
 
-    await boardService.deleteBoard(boardId);
-
+    // Création de la réponse avec null pour indiquer que la suppression a réussi
     const responseBody : APIResponse<null> = {
         success: true,
         data: null,
@@ -188,8 +186,15 @@ router.delete("/:id", async (ctx) => {
  */
 router.get("/:id/members", async (ctx) => {
     const boardId = ctx.params.id!;
+    const userPseudo = ctx.state.user?.pseudo;
+
+    // Vérification que le pseudo de l'utilisateur est présent dans le contexte
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
     
-    const members = await boardService.getBoardMembers(boardId);
+    // Récupération des membres du tableau en utilisant le service de tableau et récupération des membres
+    const members = await boardService.getBoardMembers(boardId, userPseudo);
 
     const responseBody : APIResponse<BoardMemberDto[]> = {
         success: true,
@@ -210,23 +215,24 @@ router.get("/:id/members", async (ctx) => {
  * @throws 403 si l'utilisateur n'est pas le propriétaire du tableau
  * @throws 500 si une erreur interne se produit lors de la suppression du membre dans Tomcat
  */
-router.delete("/:id/members/:userPseudo", async (ctx) => {
+router.delete("/:id/members/:memberPseudo", async (ctx) => {
     const boardId = ctx.params.id!;
-    const userPseudo = ctx.params.userPseudo!;
+    const memberPseudo = ctx.params.memberPseudo!;
+    const userPseudo = ctx.state.user?.pseudo;
 
-    // check si l'utilsateur est le propriétaire du tableau
-    const board = await boardService.getBoardById(boardId);
-    if (board.ownerPseudo !== ctx.state.user.pseudo) {
-        throw new APIException(APIErrorCode.FORBIDDEN, 403, "Seul le propriétaire du tableau peut supprimer un membre");
+    // Vérification que le pseudo de l'utilisateur est présent dans le contexte
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
     }
 
-    await boardService.removeBoardMember(boardId, userPseudo);
-    
+    // Suppression d'un membre du tableau en utilisant le service de tableau et récupération du résultat de la suppression
+    await boardService.removeBoardMember(boardId, memberPseudo, userPseudo);
+
+    // Création de la réponse avec null pour indiquer que la suppression a réussi
     const responseBody : APIResponse<null> = {
         success: true,
         data: null,
     };
-
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });    

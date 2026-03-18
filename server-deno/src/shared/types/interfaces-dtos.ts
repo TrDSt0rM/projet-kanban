@@ -20,29 +20,43 @@ export interface UpdateUserRequest {
 }
 
 /** =================================================
- * Interface Main Entities
+ * Interface Board
  ================================================= */
-export interface BoardDto {
-    id: string;
-    name: string;
+export interface BoardCreateRequest {
+    boardName: string;
+}
+
+export interface BoardDetailDto {
+    idBoard: string;
+    boardName: string;
     ownerPseudo: string;
     members: string[];
     columns: BoardColumnDto[];
 }
 
-export interface CreateBoardRequest {
-    name: string;
-}
-
-export interface UpdateBoardRequest {
-    name?: string;
-}
-
 export interface BoardMemberDto {
+    idBoard: string;
     pseudo: string;
-    role: string;
+    memberRole: string;
 }
 
+export interface BoardMemberUpdateRequest {
+    memberRole?: string;
+}
+
+export interface BoardSummaryDto {
+    idBoard: string;
+    boardName: string;
+    ownerPseudo: string;
+}
+
+export interface BoardUpdateRequest {
+    boardName?: string;
+}
+
+/** =================================================
+ * Interface Column et Task
+ ================================================= */
 export interface BoardColumnDto {
     id: string;
     name: string;

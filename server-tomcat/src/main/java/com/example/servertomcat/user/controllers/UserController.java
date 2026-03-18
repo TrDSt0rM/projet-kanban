@@ -22,6 +22,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    // Renvoie un UserAuthDto pour vérifier le mot de passe haché afin de faire le token
     @GetMapping("/internal/auth/user")
     public ResponseEntity<UserAuthDto> getAuthenticatedUser(@RequestParam String pseudo){
         return ResponseEntity.ok(userService.getUserForAuth(pseudo));
@@ -48,8 +49,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/users/me/delete")
-    public ResponseEntity<Void> delete(@RequestHeader("X-User-Pseudo") String userPseudo){
+    @DeleteMapping("/users/me")
+    public ResponseEntity<Void> delete(
+            @RequestHeader("X-User-Pseudo") String userPseudo) {
         userService.deleteUser(userPseudo);
         return ResponseEntity.noContent().build();
     }
@@ -60,15 +62,15 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PatchMapping("/admin/users/{id}/activate")
-    public ResponseEntity<Void> toggleActive(@PathVariable String id) {
-        userService.toggleActive(id);
+    @PatchMapping("/admin/users/{pseudo}/activate")
+    public ResponseEntity<Void> toggleActive(@PathVariable String pseudo) {
+        userService.toggleActive(pseudo);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/admin/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/admin/users/{pseudo}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String pseudo) {
+        userService.deleteUser(pseudo);
         return ResponseEntity.noContent().build();
     }
 

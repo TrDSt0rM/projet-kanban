@@ -13,8 +13,7 @@ public interface UserService {
     UserDto searchByPseudo(String pseudo);
     void updatePassword(String userId, String newPassword);
     void deleteUser(String pseudo);
-    // Admin
+    // Admin (il peut aussi delete n'importe quel USER qui n'est pas admin)
     List<UserDto> getAllUsers();
     void toggleActive(String userId);
-    void deleteUserAdmin(String userId);
 }
