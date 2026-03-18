@@ -1,5 +1,6 @@
 package com.example.servertomcat.entities;
 
+import com.example.servertomcat.user.entities.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

@@ -1,0 +1,26 @@
+package com.example.servertomcat.board.repositories;
+
+import com.example.servertomcat.board.entities.BoardMember;
+import com.example.servertomcat.board.entities.BoardMemberId;
+import com.example.servertomcat.board.enums.MemberRole;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface BoardMemberRepository extends JpaRepository<BoardMember, BoardMemberId> {
+
+    List<BoardMember> findByIdIdBoard(String boardId);
+
+    Optional<BoardMember> findByIdIdBoardAndIdPseudoUser(String boardId, String pseudo);
+
+    Optional<BoardMember> findByIdIdBoardAndRole(String boardId, MemberRole role);
+
+    boolean existsByIdIdBoardAndIdPseudoUser(String boardId, String pseudo);
+
+    // Vérifie si un user est owner d'un tableau
+    boolean existsByIdIdBoardAndIdPseudoUserAndRole(
+            String boardId, String pseudo, MemberRole role);
+}

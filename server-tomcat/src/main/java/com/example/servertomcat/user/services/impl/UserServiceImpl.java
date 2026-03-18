@@ -1,0 +1,104 @@
+package com.example.servertomcat.user.services.impl;
+
+import com.example.servertomcat.user.dtos.UserAuthDto;
+import com.example.servertomcat.user.dtos.UserDto;
+import com.example.servertomcat.user.dtos.UserRegisterDto;
+import com.example.servertomcat.user.entities.User;
+import com.example.servertomcat.user.mappers.UserMapper;
+import com.example.servertomcat.user.repositories.UserRepository;
+import com.example.servertomcat.user.services.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+    public long countUsers() {
+        return userRepository.count();
+    }
+
+    @Override
+    public UserDto register(UserRegisterDto dto) {
+        if (userRepository.existsByPseudo(dto.getPseudo())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Le pseudo " + dto.getPseudo() + " est déjà pris");
+        }
+
+        User user = userMapper.toEntity(dto);
+        user.setPassword(dto.getPassword());
+
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    public UserAuthDto getUserForAuth(String pseudo) {
+        User user = findUserByPseudo(pseudo);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable");
+        }
+        return userMapper.toAuthDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserDto searchByPseudo(String pseudo) {
+        User user = userRepository.findById(pseudo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    public void updatePassword(String userPseudo, String newPassword) {
+        User user = findUserByPseudo(userPseudo);
+        user.setPassword(newPassword);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(String pseudo) {
+        if (!userRepository.existsById(pseudo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé");
+        }
+        userRepository.deleteById(pseudo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public void toggleActive(String userPseudo) {
+        User user = findUserByPseudo(userPseudo);
+        user.setActive(!user.isActive());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUserAdmin(String userPseudo) {
+        if (!userRepository.existsById(userPseudo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Utilisateur introuvable");
+        }
+        userRepository.deleteById(userPseudo);
+    }
+
+    // Méthode privée pour éviter la duplication du findById + orElseThrow
+    private User findUserByPseudo(String userPseudo) {
+        return userRepository.findById(userPseudo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Utilisateur introuvable"));
+    }
+}

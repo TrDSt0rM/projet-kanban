@@ -1,10 +1,14 @@
-package com.example.servertomcat.entities;
+package com.example.servertomcat.board.entities;
 
-import com.example.servertomcat.enums.RoleMember;
+import com.example.servertomcat.board.entities.Board;
+import com.example.servertomcat.user.entities.User;
+import com.example.servertomcat.board.enums.MemberRole;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @Entity
 @Table (name = "BOARD_MEMBER")
 public class BoardMember {
@@ -23,6 +27,6 @@ public class BoardMember {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private RoleMember role;
+    @Column(name = "role",  length = 20, nullable = false)
+    private MemberRole role;
 }
