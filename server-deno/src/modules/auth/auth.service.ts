@@ -13,6 +13,7 @@ import {
   verifyPassword,
 } from "../../shared/utils/crypto.utils.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
+import { mapTomcatToUserEntity, TomcatUserDto } from "./auth.mapper.ts";
 
 export class AuthService {
   constructor() {}
@@ -21,7 +22,7 @@ export class AuthService {
   async login(pseudo: string, password: string) {
     // recupération de l'utilisateur en base de données
     const response = await safeFetch(
-      `${URL_SERVER_TOMCAT}/api/users/${pseudo}`,
+      `${URL_SERVER_TOMCAT}/api/internal/auth/user?pseudo=${pseudo}`,
     );
 
     if (!response.ok) {
@@ -32,7 +33,9 @@ export class AuthService {
       );
     }
 
-    const user = await response.json();
+    const rawData: TomcatUserDto = await response.json();
+
+    const user = mapTomcatToUserEntity(rawData);
 
     if (!isUserEntity(user)) {
       throw new APIException(

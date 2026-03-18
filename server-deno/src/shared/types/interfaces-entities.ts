@@ -13,6 +13,6 @@ export interface UserEntity {
     pseudo: string;
     password: string;
     role: string;
-    isActive: number; // 0 ou 1
+    isActive: boolean;
     [key: string]: SQLOutputValue; // Index signature
 }
