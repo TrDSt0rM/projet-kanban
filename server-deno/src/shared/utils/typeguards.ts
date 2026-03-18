@@ -13,10 +13,11 @@ import {
   BoardSummaryDto,
   UserDto,
   UserEntity,
-  UpdateUserRequest,
   BoardColumnDto,
   TaskDto,
   BoardUpdateRequest,
+  UserUpdateRequest,
+  UserUpdatePasswordRequest,
 } from "../types/mod.ts";
 import { LoginDto, RegisterDto } from "../../modules/auth/auth.types.ts";
 
@@ -193,17 +194,26 @@ export function isUserDto(obj: unknown): obj is UserDto {
     typeof obj.pseudo === "string" &&
     "role" in obj &&
     typeof obj.role === "string" &&
-    "isActive" in obj &&
-    typeof obj.isActive === "boolean"
+    "active" in obj &&
+    typeof obj.active === "boolean"
   );
 }
 
-export function isUpdateUserRequest(obj: unknown): obj is UpdateUserRequest {
+export function isUserUpdateRequest(obj: unknown): obj is UserUpdateRequest {
   return (
     !!obj &&
     typeof obj === "object" &&
     ("role" in obj ? typeof obj.role === "string" : true) &&
     ("isActive" in obj ? typeof obj.isActive === "boolean" : true) &&
     ("password" in obj ? typeof obj.password === "string" : true)
+  );
+}
+
+export function isUserUpdatePasswordRequest(obj: unknown): obj is UserUpdatePasswordRequest {
+  return (
+    !!obj &&
+    typeof obj === "object" &&
+    "newPassword" in obj &&
+    typeof obj.newPassword === "string"
   );
 }

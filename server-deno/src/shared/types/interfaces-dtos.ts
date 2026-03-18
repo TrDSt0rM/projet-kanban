@@ -11,10 +11,14 @@
 export interface UserDto {
     pseudo: string;
     role : string;
-    isActive: boolean;
+    active: boolean;
 }
 
-export interface UpdateUserRequest {
+export interface UserUpdatePasswordRequest {
+    newPassword: string;
+}
+
+export interface UserUpdateRequest {
     role?: string;
     isActive?: boolean;
 }

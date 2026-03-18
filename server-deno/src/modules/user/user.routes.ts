@@ -13,7 +13,7 @@ import {
   APIResponse,
   UserDto,
 } from "../../shared/types/mod.ts";
-import { isUpdateUserRequest } from "../../shared/utils/typeguards.ts";
+import { isUserUpdateRequest } from "../../shared/utils/typeguards.ts";
 
 export const router = new Router({ prefix: "/users" });
 
@@ -42,6 +42,34 @@ router.get("/:pseudo", async (ctx) => {
   ctx.response.body = responseBody;
 });
 
+/**
+ * Récupère tous les utilisateurs
+ * @route GET /users
+ * @returns la liste de tous les utilisateurs
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 500 si une erreur interne se produit lors de la récupération des utilisateurs depuis Tomcat
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à UserDto[]
+ */
+router.get("/", async (ctx) => {
+  const userPseudo = ctx.state.user?.pseudo;
+
+  // Vérifie que l'utilisateur est authentifié
+  if (!userPseudo) {
+    throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+  }
+
+  const users: UserDto[] = await userService.getUser();
+
+  // Construction de la réponse
+  const responseBody: APIResponse<UserDto[]> = {
+    success: true,
+    data: users,
+  };
+
+  ctx.response.status = 200;
+  ctx.response.body = responseBody;
+});
+
 // router.post("/", async (ctx) => {}); Méthode de création d'utilisateur non nécessaire
 // car les utilisateurs sont créés via la méthode register de l'authentification
 
@@ -56,11 +84,12 @@ router.get("/:pseudo", async (ctx) => {
  * @throws 500 si une erreur interne se produit lors de la mise à jour de l'utilisateur dans Tomcat
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à UserDto
  */
+// Route non branchée
 router.put("/:pseudo", async (ctx) => {
   const pseudo = ctx.params.pseudo;
   const updateUserRequest = await ctx.request.body.json();
 
-  if (!isUpdateUserRequest(updateUserRequest)) {
+  if (!isUserUpdateRequest(updateUserRequest)) {
     throw new APIException(
       APIErrorCode.BAD_REQUEST,
       400,
@@ -88,33 +117,54 @@ router.put("/:pseudo", async (ctx) => {
 });
 
 /**
- * Supprime un utilisateur à partir de son pseudo
- * @route DELETE /users/:pseudo
- * @param pseudo le pseudo de l'utilisateur à supprimer
- * @returns null si la suppression a réussi
- * @throws 401 si l'utilisateur n'est pas autorisé à supprimer cet utilisateur (non admin ou pseudo différent du token)
- * @throws 500 si une erreur interne se produit lors de la suppression de l'utilisateur dans Tomcat
- * @throws 500 si les données retournées par Tomcat ne sont pas conformes à UserDto
+ * Met à jour le mot de passe de l'utilisateur connecté à partir de son pseudo et du nouveau mot de passe
+ * @route PATCH /users/me/password
+ * @param newPassword le nouveau mot de passe de l'utilisateur
  */
-router.delete("/:pseudo", async (ctx) => {
-  const isOwner = ctx.state.user.pseudo === ctx.params.pseudo;
-  const isAdmin = ctx.state.user.role === "admin";
+router.patch("/me/password", async (ctx) => {
+  const pseudo = ctx.state.user.pseudo;
+  const newPassword = await ctx.request.body.json();
 
-  if (!isOwner && !isAdmin) {
-    throw new APIException(
-      APIErrorCode.UNAUTHORIZED,
-      401,
-      "Vous n'êtes pas autorisé à supprimer cet utilisateur",
-    );
-  }
+  // Modification du mot de passe de l'utilisateur en utilisant le service utilisateur
+  await userService.updatePassword(pseudo, newPassword);
 
-  await userService.deleteUser(ctx.params.pseudo);
-
+  // Création de la réponse avec le résultat de la modification du mot de passe
   const responseBody: APIResponse<null> = {
     success: true,
     data: null,
   };
+  ctx.response.status = 200;
+  ctx.response.body = responseBody;
+});
 
+/**
+ * Supprime un utilisateur à partir de son pseudo
+ * @route DELETE /users/:pseudo
+ * @returns null si la suppression a réussi
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas autorisé à supprimer cet utilisateur
+ * @throws 500 si une erreur interne se produit lors de la suppression de l'utilisateur dans Tomcat
+ */
+router.delete("/users/me", async (ctx) => {
+
+  // Vérifie que l'utilisateur est autorisé à supprimer cet utilisateur
+  const userPseudo = ctx.state.user.pseudo;
+  if (!userPseudo) {
+    throw new APIException(
+      APIErrorCode.UNAUTHORIZED,
+      401,
+      "Utilisateur non authentifié",
+    );
+  }
+  
+  // Suppression de l'utilisateur en utilisant le service utilisateur et récupération du résultat de la suppression
+  await userService.deleteUser(userPseudo);
+
+  // Création de la réponse avec le résultat de la suppression
+  const responseBody: APIResponse<null> = {
+    success: true,
+    data: null,
+  };
   ctx.response.status = 200;
   ctx.response.body = responseBody;
 });
