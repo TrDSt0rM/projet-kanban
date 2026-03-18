@@ -46,7 +46,7 @@ export class AuthService {
     }
 
     // vérification de l'activation du compte
-    if (user.isActive === 0) {
+    if (user.isActive === false) {
       throw new APIException(
         APIErrorCode.FORBIDDEN,
         403,

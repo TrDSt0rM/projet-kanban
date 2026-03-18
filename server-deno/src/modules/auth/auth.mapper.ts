@@ -9,7 +9,7 @@ export function mapTomcatToUserEntity(tomcatData: TomcatUserDto) {
   return {
     pseudo: tomcatData.pseudo,
     password: tomcatData.password,
-    role: tomcatData.userRole,               // userRole -> role
-    isActive: tomcatData.active
+    role: tomcatData.userRole,              // userRole -> role
+    isActive: tomcatData.active             // active -> isActive 
   };
 }

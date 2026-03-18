@@ -31,7 +31,7 @@ export async function authMiddleware(ctx: AuthContext, next: Next) {
 }
 
 export async function adminOnlyMiddleware(ctx: AuthContext, next: Next) {
-  if (!(ctx.state.user?.role == "admin")) {
+  if (!(ctx.state.user?.role == "ADMIN")) {
     throw new APIException(APIErrorCode.UNAUTHORIZED, 403, "Accès admin requis");
   }
 
