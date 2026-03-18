@@ -27,10 +27,30 @@ public class UserService {
     }
 
     public User createUser(User user){
-        // vérifie que le pseudo n'existe pas déjà
         if ( userRepository.existsById(user.getPseudo()) ) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Le pseudo " + user.getPseudo() + " est déjà pris");
         }
         return userRepository.save(user);
+    }
+
+    public User updateUser(String pseudo, User userDetails) {
+        User user = userRepository.findById(pseudo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé"));
+
+        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+            user.setPassword(userDetails.getPassword());
+        }
+        if (userDetails.getRole() != null) {
+            user.setRole(userDetails.getRole());
+        }
+
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(String pseudo) {
+        if (!userRepository.existsById(pseudo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé");
+        }
+        userRepository.deleteById(pseudo);
     }
 }

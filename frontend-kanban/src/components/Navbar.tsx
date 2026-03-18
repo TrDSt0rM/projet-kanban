@@ -23,6 +23,16 @@ export function Navbar({ user, onLogout }: NavbarProps) {
   const navButtonStyle =
     "flex items-center gap-2 px-4 py-1.5 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200";
 
+  const handleLogoutClick = () => {
+    setIsMenuOpen(false);
+    // 1. Rediriger vers la racine
+    navigate("/", { replace: true });
+    // 2. Nettoyer le state et le localStorage via la fonction de App.tsx
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
   return (
     <nav className="w-full flex items-center justify-between p-3 border-b bg-white shadow-sm relative z-50">
       <div className="flex items-center gap-6">
@@ -50,7 +60,6 @@ export function Navbar({ user, onLogout }: NavbarProps) {
         </div>
       </div>
 
-      {/* Menu Utilisateur avec Dropdown */}
       <div className="relative">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -77,7 +86,6 @@ export function Navbar({ user, onLogout }: NavbarProps) {
           />
         </button>
 
-        {/* Liste déroulante */}
         {isMenuOpen && (
           <>
             <div
@@ -110,10 +118,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
               <div className="h-px bg-gray-100 my-1"></div>
 
               <button
-                onClick={() => {
-                  onLogout?.();
-                  setIsMenuOpen(false);
-                }}
+                onClick={handleLogoutClick}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="size-4" />

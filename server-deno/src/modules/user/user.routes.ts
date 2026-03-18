@@ -7,7 +7,12 @@
 import { Router } from "@oak/oak";
 import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { userService } from "../../shared/container.ts";
-import { APIException, APIErrorCode, APIResponse, UserDto } from "../../shared/types/mod.ts";
+import {
+  APIException,
+  APIErrorCode,
+  APIResponse,
+  UserDto,
+} from "../../shared/types/mod.ts";
 import { isUpdateUserRequest } from "../../shared/utils/typeguards.ts";
 
 export const router = new Router({ prefix: "/users" });
@@ -24,21 +29,21 @@ router.use(authMiddleware);
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à UserDto
  */
 router.get("/:pseudo", async (ctx) => {
-    const pseudo = ctx.params.pseudo;
+  const pseudo = ctx.params.pseudo;
 
-    const response = await userService.getUserByPseudo(pseudo);
+  const response = await userService.getUserByPseudo(pseudo);
 
-    const responseBody : APIResponse<UserDto> = {
-        success: true,
-        data: response,
-    }
+  const responseBody: APIResponse<UserDto> = {
+    success: true,
+    data: response,
+  };
 
-    ctx.response.status = 200;
-    ctx.response.body = responseBody;
+  ctx.response.status = 200;
+  ctx.response.body = responseBody;
 });
 
-// router.post("/", async (ctx) => {}); Méthode de création d'utilisateur non nécessaire 
-// car les utilisateurs sont créés via la méthode register de l'authentification 
+// router.post("/", async (ctx) => {}); Méthode de création d'utilisateur non nécessaire
+// car les utilisateurs sont créés via la méthode register de l'authentification
 
 /**
  * Met à jour un utilisateur à partir de son pseudo et des données de mise à jour (role et/ou isActive)
@@ -52,27 +57,34 @@ router.get("/:pseudo", async (ctx) => {
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à UserDto
  */
 router.put("/:pseudo", async (ctx) => {
-    const pseudo = ctx.params.pseudo;
-    const updateUserRequest = await ctx.request.body.json();
+  const pseudo = ctx.params.pseudo;
+  const updateUserRequest = await ctx.request.body.json();
 
-    if (!isUpdateUserRequest(updateUserRequest)) {
-        throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de requête invalides");
-    }
+  if (!isUpdateUserRequest(updateUserRequest)) {
+    throw new APIException(
+      APIErrorCode.BAD_REQUEST,
+      400,
+      "Données de requête invalides",
+    );
+  }
 
-    // Vérification que l'utilisateur est admin ou que le pseudo de l'utilisateur correspond à celui du token
-    if (ctx.state.user.role !== "admin" && ctx.state.user.pseudo !== pseudo) {
-        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Vous n'êtes pas autorisé à modifier cet utilisateur");
-    }
+  if (ctx.state.user.role !== "admin" && ctx.state.user.pseudo !== pseudo) {
+    throw new APIException(
+      APIErrorCode.UNAUTHORIZED,
+      401,
+      "Vous n'êtes pas autorisé à modifier cet utilisateur",
+    );
+  }
 
-    const reponse = await userService.updateUser(pseudo, updateUserRequest);
-    
-    const responseBody : APIResponse<UserDto> = {
-        success: true,
-        data: reponse,
-    }
+  const reponse = await userService.updateUser(pseudo, updateUserRequest);
 
-    ctx.response.status = 200;
-    ctx.response.body = responseBody;
+  const responseBody: APIResponse<UserDto> = {
+    success: true,
+    data: reponse,
+  };
+
+  ctx.response.status = 200;
+  ctx.response.body = responseBody;
 });
 
 /**
@@ -85,17 +97,24 @@ router.put("/:pseudo", async (ctx) => {
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à UserDto
  */
 router.delete("/:pseudo", async (ctx) => {
-    if (!(ctx.state.user.pseudo == ctx.params.pseudo) || (ctx.state.user.role != "admin")) {
-        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Vous n'êtes pas autorisé à supprimer cet utilisateur");
-    }
-    
-    await userService.deleteUser(ctx.params.pseudo);
+  const isOwner = ctx.state.user.pseudo === ctx.params.pseudo;
+  const isAdmin = ctx.state.user.role === "admin";
 
-    const responseBody : APIResponse<null> = {
-        success: true,
-        data: null,
-    }
-    
-    ctx.response.status = 200;
-    ctx.response.body = responseBody;
+  if (!isOwner && !isAdmin) {
+    throw new APIException(
+      APIErrorCode.UNAUTHORIZED,
+      401,
+      "Vous n'êtes pas autorisé à supprimer cet utilisateur",
+    );
+  }
+
+  await userService.deleteUser(ctx.params.pseudo);
+
+  const responseBody: APIResponse<null> = {
+    success: true,
+    data: null,
+  };
+
+  ctx.response.status = 200;
+  ctx.response.body = responseBody;
 });

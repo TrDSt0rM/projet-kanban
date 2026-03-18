@@ -64,7 +64,11 @@ function App() {
         <Route
           path="/dashboard/new"
           element={
-            user ? <CreateBoard user={user} /> : <Navigate to="/login" />
+            user ? (
+              <CreateBoard user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
 

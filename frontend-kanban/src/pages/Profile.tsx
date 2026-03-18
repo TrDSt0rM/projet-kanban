@@ -52,9 +52,9 @@ export function Profile({
     setIsLoading(true);
 
     try {
-      // On envoie une requête PUT à Deno (port 8000)
+      // CORRECTION : L'URL pointait vers /password (404), on utilise la route PUT /users/:pseudo
       const response = await fetch(
-        `http://localhost:8000/users/${user.pseudo}/password`,
+        `http://localhost:8000/users/${user.pseudo}`,
         {
           method: "PUT",
           headers: {
@@ -223,7 +223,7 @@ export function Profile({
           </div>
         </div>
 
-        {/* Section Suppression de Compte (Zone de danger) */}
+        {/* Section Suppression de Compte */}
         <div className="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
           <div className="bg-red-50 p-6 border-b border-red-100">
             <h2 className="text-lg font-semibold text-red-900 flex items-center gap-2">

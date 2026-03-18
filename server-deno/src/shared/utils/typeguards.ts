@@ -77,9 +77,7 @@ export function isBoardDto(obj: unknown): obj is BoardDto {
     "id" in obj &&
     typeof obj.id === "string" &&
     "name" in obj &&
-    typeof obj.name === "string" &&
-    "description" in obj &&
-    typeof obj.description === "string"
+    typeof obj.name === "string"
   );
 }
 
@@ -174,6 +172,7 @@ export function isUpdateUserRequest(obj: unknown): obj is UpdateUserRequest {
     !!obj &&
     typeof obj === "object" &&
     ("role" in obj ? typeof obj.role === "string" : true) &&
-    ("isActive" in obj ? typeof obj.isActive === "boolean" : true)
+    ("isActive" in obj ? typeof obj.isActive === "boolean" : true) &&
+    ("password" in obj ? typeof obj.password === "string" : true)
   );
 }

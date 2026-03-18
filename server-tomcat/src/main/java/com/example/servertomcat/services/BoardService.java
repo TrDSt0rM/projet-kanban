@@ -11,6 +11,7 @@ import com.example.servertomcat.repositories.BoardMemberRepository;
 import com.example.servertomcat.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,27 +42,44 @@ public class BoardService {
         return boardRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public BoardDTO createBoard(BoardDTO dto, String ownerPseudo) {
-        User creator = userRepository.findById(ownerPseudo)
-                .orElseThrow(() -> new RuntimeException("Utilisateur " + ownerPseudo + " inexistant"));
-
         Board board = new Board();
         board.setId(dto.getId());
         board.setName(dto.getName());
+        board.setMembers(new ArrayList<>());
 
-        BoardMember owner = new BoardMember();
-        owner.setBoard(board);
-        owner.setUser(creator);
-        owner.setRole(RoleMember.OWNER);
+        User ownerUser = userRepository.findById(ownerPseudo)
+                .orElseThrow(() -> new RuntimeException("Propriétaire " + ownerPseudo + " introuvable"));
 
-        board.getMembers().add(owner);
+        BoardMember ownerEntry = new BoardMember();
+        ownerEntry.setBoard(board);
+        ownerEntry.setUser(ownerUser);
+        ownerEntry.setRole(RoleMember.OWNER);
+        board.getMembers().add(ownerEntry);
 
-        Board saveBoard = boardRepository.save(board);
+        if (dto.getMembers() != null) {
+            for (String mPseudo : dto.getMembers()) {
+                if (!mPseudo.equals(ownerPseudo)) {
+                    User memberUser = userRepository.findById(mPseudo)
+                            .orElseThrow(() -> new RuntimeException("Membre " + mPseudo + " introuvable"));
+
+                    BoardMember memberEntry = new BoardMember();
+                    memberEntry.setBoard(board);
+                    memberEntry.setUser(memberUser);
+                    memberEntry.setRole(RoleMember.MEMBER);
+                    board.getMembers().add(memberEntry);
+                }
+            }
+        }
+
+        Board savedBoard = boardRepository.save(board);
 
         BoardDTO responseDto = new BoardDTO();
-        responseDto.setId(saveBoard.getId());
-        responseDto.setName(saveBoard.getName());
+        responseDto.setId(savedBoard.getId());
+        responseDto.setName(savedBoard.getName());
         responseDto.setOwnerPseudo(ownerPseudo);
+        responseDto.setMembers(dto.getMembers());
         responseDto.setColumns(new ArrayList<>());
         return responseDto;
     }

@@ -15,8 +15,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/{pseudo}")
-    public ResponseEntity<User> getUserByPseudo(@PathVariable String pseudo) {
+    @GetMapping
+    public ResponseEntity<User> getUserByPseudo(@RequestParam String pseudo) {
         User user = userService.getUserByPseudo(pseudo);
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -29,5 +29,16 @@ public class UserController {
         // Deno envoie un objet User avec le password DÉJÀ HASHÉ
         User userCreated = userService.createUser(user);
         return ResponseEntity.ok(userCreated);
+    }
+
+    @PutMapping
+    public User update(@RequestParam String pseudo, @RequestBody User userDetails) {
+        return userService.updateUser(pseudo, userDetails);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> delete(@RequestParam String pseudo) {
+        userService.deleteUser(pseudo);
+        return ResponseEntity.noContent().build();
     }
 }
