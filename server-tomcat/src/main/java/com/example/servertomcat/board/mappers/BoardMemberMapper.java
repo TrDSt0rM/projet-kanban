@@ -10,5 +10,6 @@ public interface BoardMemberMapper {
 
     @Mapping(source = "user.pseudo", target = "pseudo")
     @Mapping(source = "id.idBoard", target = "idBoard")
+    @Mapping(source = "role", target = "memberRole")
     BoardMemberDto toDto(BoardMember boardMember);
 }
