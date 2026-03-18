@@ -77,7 +77,7 @@ export class AuthService {
     // hachage du mot de passe avant enregistrement
     const hashedPassword = await hashPassword(password);
 
-    const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/users`, {
+    const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
