@@ -6,23 +6,15 @@
  */
 import {
   SQLOutputValue,
-  BoardCreateRequest,
-  BoardDetailDto,
-  BoardMemberDto,
-  BoardMemberUpdateRequest,
-  BoardSummaryDto,
-  UserDto,
-  UserEntity,
-  BoardColumnDto,
-  BoardUpdateRequest,
-  UserUpdateRequest,
-  UserUpdatePasswordRequest,
-  BoardColumnCreateRequest,
-  BoardColumnUpdatePositionRequest,
-  BoardColumnUpdateRequest,
-  InvitationCreateRequest,
-  InvitationDto,
-  TaskAssignRequest, TaskCreateRequest, TaskDto, 
+  BoardCreateRequest, BoardDetailDto, BoardMemberDto,
+  BoardMemberUpdateRequest, BoardSummaryDto, BoardUpdateRequest,
+  BoardColumnDto, BoardColumnCreateRequest, BoardColumnUpdatePositionRequest, BoardColumnUpdateRequest,
+  AttachmentCreateRequest, AttachmentDto,
+  CommentCreateRequest, CommentDto, CommentUpdateRequest,
+  UserDto, UserEntity, UserActivityDto, StatsDto,
+  UserUpdateRequest, UserUpdatePasswordRequest,  
+  InvitationCreateRequest, InvitationDto,
+  TaskAssignRequest, TaskCreateRequest, TaskSummaryDto, TaskDetailDto, 
   TaskUpdateRequest, TaskMoveRequest, TaskPositionRequest,
 } from "../types/mod.ts";
 import { LoginDto, RegisterDto } from "../../modules/auth/auth.types.ts";
@@ -163,7 +155,7 @@ export function isBoardColumnDto(obj: unknown): obj is BoardColumnDto {
     typeof obj.position === "number" &&
     "tasks" in obj &&
     Array.isArray(obj.tasks) &&
-    obj.tasks.every(isTaskDto)
+    obj.tasks.every(isTaskSummaryDto)
   );
 }
 
@@ -234,24 +226,36 @@ export function isTaskCreateRequest(obj: unknown): obj is TaskCreateRequest {
     );
 }
 
-export function isTaskDto(obj: unknown): obj is TaskDto {
+export function isTaskSummaryDto(obj: unknown): obj is TaskSummaryDto {
   return (
     !!obj &&
     typeof obj === "object" &&
-    "id" in obj &&
-    typeof obj.id === "string" &&
-    "title" in obj &&
-    typeof obj.title === "string" &&
+    "idTask" in obj &&
+    typeof obj.idTask === "string" &&
+    "taskName" in obj &&
+    typeof obj.taskName === "string" &&
     "description" in obj &&
     typeof obj.description === "string" &&
     "position" in obj &&
     typeof obj.position === "number" &&
     "priority" in obj &&
     typeof obj.priority === "string" &&
-    ("expectedCompletionDate" in obj
-      ? typeof obj.expectedCompletionDate === "string"
-      : true) &&
+    ("expectedCompletionDate" in obj ? typeof obj.expectedCompletionDate === "string" : true) &&
     ("assignedTo" in obj ? typeof obj.assignedTo === "string" : true)
+  );
+}
+
+export function isTaskDetailDto(obj: unknown): obj is TaskDetailDto {
+  return (
+    !!obj &&
+    typeof obj === "object" &&
+    isTaskSummaryDto(obj) &&
+    "comments" in obj &&
+    Array.isArray(obj.comments) &&
+    obj.comments.every(isCommentDto) &&
+    "taskAttachments" in obj &&
+    Array.isArray(obj.taskAttachments) &&
+    obj.taskAttachments.every(isAttachmentDto)
   );
 }
 
@@ -274,6 +278,64 @@ export function isTaskUpdateRequest(obj: unknown): obj is TaskUpdateRequest {
     typeof obj === "object" && 
     "taskName" in obj && 
     typeof obj.taskName === "string";
+}
+
+export function isCommentCreateRequest(obj: unknown): obj is CommentCreateRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "content" in obj && 
+    typeof obj.content === "string";
+}
+
+export function isCommentUpdateRequest(obj: unknown): obj is CommentUpdateRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "content" in obj && 
+    typeof obj.content === "string";
+}
+
+export function isCommentDto(obj: unknown): obj is CommentDto {
+    return (
+        !!obj &&
+        typeof obj === "object" &&
+        "commentId" in obj &&
+        typeof obj.commentId === "string" &&
+        "userId" in obj &&
+        typeof obj.userId === "string" &&
+        "message" in obj &&
+        typeof obj.message === "string" &&
+        "date" in obj &&
+        typeof obj.date === "string" &&
+        "attachments" in obj &&
+        Array.isArray(obj.attachments) &&
+        obj.attachments.every(isAttachmentDto)
+    );
+}
+
+export function isAttachmentCreateRequest(obj: unknown): obj is AttachmentCreateRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "fileName" in obj && 
+    typeof obj.fileName === "string" && 
+    "empreinte" in obj && 
+    typeof obj.empreinte === "string";
+}
+
+export function isAttachmentDto(obj: unknown): obj is AttachmentDto {
+    return (
+        !!obj &&
+        typeof obj === "object" &&
+        "fileId" in obj &&
+        typeof obj.fileId === "string" &&
+        "fileName" in obj &&
+        typeof obj.fileName === "string" &&
+        "empreinte" in obj &&
+        typeof obj.empreinte === "string" &&
+        "uploaderId" in obj &&
+        typeof obj.uploaderId === "string" &&
+        "uploaderDate" in obj &&
+        typeof obj.uploaderDate === "string"
+    );
 }
 
 /* ==================================================

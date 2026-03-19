@@ -2,7 +2,7 @@ import { Router } from "@oak/oak";
 import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { taskService } from "../../shared/container.ts";
 import { 
-    APIException, APIErrorCode, APIResponse, TaskDto
+    APIException, APIErrorCode, APIResponse, TaskSummaryDto
 } from "../../shared/types/mod.ts";
 
 export const router = new Router();
@@ -22,7 +22,7 @@ router.get("/columns/:columnId/tasks", async (ctx) => {
     const tasks = await taskService.getTasksByColumnId(columnId, userPseudo);
     
     // Construction de la réponse
-    const responseBody : APIResponse<TaskDto[]> = {
+    const responseBody : APIResponse<TaskSummaryDto[]> = {
         success: true,
         data: tasks,
     }
@@ -48,7 +48,7 @@ router.post("/columns/:columnId/tasks", async (ctx) => {
     const task = await taskService.createTask(columnId, taskRequest, userPseudo);
     
     // Construction de la réponse
-    const responseBody : APIResponse<TaskDto> = {
+    const responseBody : APIResponse<TaskSummaryDto> = {
         success: true,
         data: task,
     }
@@ -71,7 +71,7 @@ router.get("/tasks/:taskId", async (ctx) => {
     const task = await taskService.getTaskById(taskId, userPseudo);
 
     // Construction de la réponse
-    const responseBody : APIResponse<TaskDto> = {
+    const responseBody : APIResponse<TaskSummaryDto> = {
         success: true,
         data: task,
     }
@@ -97,7 +97,7 @@ router.put("/tasks/:taskId", async (ctx) => {
     const updatedTask = await taskService.updateTask(taskId, taskUpdateRequest, userPseudo);
 
     // Construction de la réponse
-    const responseBody : APIResponse<TaskDto> = {
+    const responseBody : APIResponse<TaskSummaryDto> = {
         success: true,
         data: updatedTask,
     }
@@ -198,7 +198,7 @@ router.patch("/tasks/:taskId/assign", async (ctx) => {
     const assignedTask = await taskService.assignTask(taskId, taskAssignRequest, userPseudo);
 
     // Construction de la réponse
-    const responseBody : APIResponse<TaskDto> = {
+    const responseBody : APIResponse<TaskSummaryDto> = {
         success: true,
         data: assignedTask,
     }
@@ -220,7 +220,7 @@ router.get("/boards/:boardId/tasks/search", async (ctx) => {
     const priority = ctx.request.url.searchParams.get("priority");
     const assignedTo = ctx.request.url.searchParams.get("assignedTo");
 
-    let tasks: TaskDto[] = []; 
+    let tasks: TaskSummaryDto[] = []; 
 
     if (keyword) {
         tasks = await taskService.searchTasksByKeyword(boardId, keyword, userPseudo);

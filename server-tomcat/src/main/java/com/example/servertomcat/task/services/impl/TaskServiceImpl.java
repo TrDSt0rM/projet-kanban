@@ -3,6 +3,12 @@ package com.example.servertomcat.task.services.impl;
 import com.example.servertomcat.board.repositories.BoardMemberRepository;
 import com.example.servertomcat.boardColumn.BoardColumn;
 import com.example.servertomcat.boardColumn.BoardColumnRepository;
+import com.example.servertomcat.comment.documents.AttachmentDocument;
+import com.example.servertomcat.comment.documents.CommentDocument;
+import com.example.servertomcat.comment.documents.TaskDocument;
+import com.example.servertomcat.comment.dtos.AttachmentDto;
+import com.example.servertomcat.comment.dtos.CommentDto;
+import com.example.servertomcat.comment.repositories.TaskDocumentRepository;
 import com.example.servertomcat.task.dtos.*;
 import com.example.servertomcat.task.entities.Task;
 import com.example.servertomcat.task.enums.Priority;
@@ -18,7 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 @Transactional
@@ -30,6 +39,7 @@ public class TaskServiceImpl implements TaskService {
     private final BoardMemberRepository boardMemberRepository;
     private final UserRepository userRepository;
     private final TaskMapper taskMapper;
+    private final TaskDocumentRepository taskDocumentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,10 +54,24 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public TaskSummaryDto getTaskById(String taskId, String pseudo) {
+    public TaskDetailDto getTaskById(String taskId, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
-        return taskMapper.toDto(task);
+        TaskDetailDto dto = taskMapper.toDetailDto(task);
+
+        // Récupère les commentaires depuis MongoDB
+        Optional<TaskDocument> docOpt = taskDocumentRepository.findByTaskId(taskId);
+        if (docOpt.isPresent()) {
+            TaskDocument doc = docOpt.get();
+            dto.setComments(doc.getComments().stream()
+                    .map(this::toCommentDto)
+                    .toList());
+            dto.setTaskAttachments(doc.getTaskAttachments().stream()
+                    .map(this::toAttachmentDto)
+                    .toList());
+        }
+
+        return dto;
     }
 
     @Override
@@ -195,42 +219,25 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    /*
-    public TaskDto getTaskWithComments(String taskId) {
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tâche non trouvée"));
-
-        List<Comment> comments = commentRepository.findByTaskId(taskId);
-
-        return convertToFullDTO(task, comments);
-    }
-
-
-    private TaskDto convertToFullDTO(Task task, List<Comment> comments) {
-        TaskDto dto = new TaskDto();
-        dto.setId(task.getId());
-        dto.setName(task.getName());
-        dto.setDescription(task.getDescription());
-        dto.setOrder(task.getOrder());
-        dto.setPriority(task.getPriority());
-        dto.setLimitDate(task.getLimitDate());
-
-        if (task.getAssignedTo() != null) {
-            dto.setAssignedToPseudo(task.getAssignedTo().getPseudo());
-        }
-
-        List<CommentDTO> commentDTOs = comments.stream().map(c -> {
-            CommentDTO cDto = new CommentDTO();
-            cDto.setId(c.getId());
-            cDto.setTaskId(c.getTaskId());
-            cDto.setContent(c.getContent());
-            cDto.setAuthorPseudo(c.getAuthorPseudo());
-            cDto.setCreatedAt(c.getCreatedAt());
-            return cDto;
-        }).collect(Collectors.toList());
-
-        dto.setComments(commentDTOs);
+    private CommentDto toCommentDto(CommentDocument c) {
+        CommentDto dto = new CommentDto();
+        dto.setCommentId(c.getCommentId());
+        dto.setUserId(c.getUserId());
+        dto.setMessage(c.getMessage());
+        dto.setDate(c.getDate());
+        dto.setAttachments(c.getAttachments().stream()
+                .map(this::toAttachmentDto)
+                .toList());
         return dto;
     }
-    */
+
+    private AttachmentDto toAttachmentDto(AttachmentDocument a) {
+        AttachmentDto dto = new AttachmentDto();
+        dto.setFileId(a.getFileId());
+        dto.setFileName(a.getFileName());
+        dto.setEmpreinte(a.getEmpreinte());
+        dto.setUploaderId(a.getUploaderId());
+        dto.setUploaderDate(a.getUploaderDate());
+        return dto;
+    }
 }

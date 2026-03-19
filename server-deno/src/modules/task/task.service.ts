@@ -2,15 +2,15 @@ import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import {
   APIErrorCode,
   APIException,
-  TaskAssignRequest, TaskDto, TaskCreateRequest, TaskUpdateRequest, TaskMoveRequest, TaskPositionRequest,
+  TaskAssignRequest, TaskSummaryDto, TaskCreateRequest, TaskUpdateRequest, TaskMoveRequest, TaskPositionRequest,
 } from "../../shared/types/mod.ts";
-import { isTaskAssignRequest, isTaskDto, isTaskCreateRequest, isTaskUpdateRequest, isTaskMoveRequest, isTaskPositionRequest } from "../../shared/utils/typeguards.ts";
+import { isTaskAssignRequest, isTaskSummaryDto, isTaskCreateRequest, isTaskUpdateRequest, isTaskMoveRequest, isTaskPositionRequest } from "../../shared/utils/typeguards.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 
 export class TaskService {
   constructor() {}
 
-    async getTasksByColumnId(columnId: string, userPseudo: string): Promise<TaskDto[]> {
+    async getTasksByColumnId(columnId: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie la requête à Tomcat pour récupérer les tâches de la colonne
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/columns/${columnId}/tasks`, {
@@ -44,11 +44,11 @@ export class TaskService {
         const tasks = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(tasks) || !tasks.every(isTaskDto)) {
+        if (!Array.isArray(tasks) || !tasks.every(isTaskSummaryDto)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto[]",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
             );
         }
 
@@ -56,7 +56,7 @@ export class TaskService {
         return tasks;
     }
     
-    async createTask(columnId: string, task: TaskCreateRequest, userPseudo: string): Promise<TaskDto> {
+    async createTask(columnId: string, task: TaskCreateRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
         if(!isTaskCreateRequest(task)) {
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de création de tableau invalides");
@@ -77,18 +77,18 @@ export class TaskService {
 
         const createdTask = await response.json();
 
-        if (!isTaskDto(createdTask)) {
+        if (!isTaskSummaryDto(createdTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto",
             );
         }
 
         return createdTask;
     }
 
-    async getTaskById(taskId: string, userPseudo: string): Promise<TaskDto> {
+    async getTaskById(taskId: string, userPseudo: string): Promise<TaskSummaryDto> {
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}`, {
             method: "GET",
             headers: {
@@ -117,18 +117,18 @@ export class TaskService {
 
         const task = await response.json();
 
-        if (!isTaskDto(task)) {
+        if (!isTaskSummaryDto(task)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto",
             );
         }
 
         return task;
     }
 
-    async updateTask(taskId: string, taskUpdate: TaskUpdateRequest, userPseudo: string): Promise<TaskDto> {
+    async updateTask(taskId: string, taskUpdate: TaskUpdateRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
         if(!isTaskUpdateRequest(taskUpdate)) {
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de mise à jour de tâche invalides");
@@ -149,11 +149,11 @@ export class TaskService {
 
         const updatedTask = await response.json();
 
-        if (!isTaskDto(updatedTask)) {
+        if (!isTaskSummaryDto(updatedTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto",
             );
         }
 
@@ -190,7 +190,7 @@ export class TaskService {
         return;
     }
 
-    async moveTask(taskId: string, taskMove: TaskMoveRequest, userPseudo: string): Promise<TaskDto> {
+    async moveTask(taskId: string, taskMove: TaskMoveRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
         if(!isTaskMoveRequest(taskMove)) {
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de déplacement de tâche invalides");
@@ -211,18 +211,18 @@ export class TaskService {
 
         const movedTask = await response.json();
 
-        if (!isTaskDto(movedTask)) {
+        if (!isTaskSummaryDto(movedTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto",
             );
         }
 
         return movedTask;
     }
 
-    async updateTaskPosition(taskId: string, taskPosition: TaskPositionRequest, userPseudo: string): Promise<TaskDto> {
+    async updateTaskPosition(taskId: string, taskPosition: TaskPositionRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
         // Validation des données de mise à jour de position de tâche
         if(!isTaskPositionRequest(taskPosition)) {
@@ -246,11 +246,11 @@ export class TaskService {
 
         // reponse 2**, on parse la tâche retournée
         const updatedTask = await response.json();
-        if(!isTaskDto(updatedTask)) {
+        if(!isTaskSummaryDto(updatedTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto",
             );
         }
 
@@ -258,7 +258,7 @@ export class TaskService {
         return updatedTask;
     }
 
-    async assignTask(taskId: string, taskAssign: TaskAssignRequest, userPseudo: string): Promise<TaskDto> {
+    async assignTask(taskId: string, taskAssign: TaskAssignRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
         // Validation des données d'assignation de tâche
         if(!isTaskAssignRequest(taskAssign)) {
@@ -282,11 +282,11 @@ export class TaskService {
         
         // reponse 2**, on parse la tâche retournée
         const assignedTask = await response.json();
-        if(!isTaskDto(assignedTask)) {
+        if(!isTaskSummaryDto(assignedTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto",
             );
         }
         
@@ -294,7 +294,7 @@ export class TaskService {
         return assignedTask;
     }
 
-    async searchTasksByKeyword(boardId: string, keyword: string, userPseudo: string): Promise<TaskDto[]> {
+    async searchTasksByKeyword(boardId: string, keyword: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie de la requête à Tomcat pour rechercher les tâches du tableau correspondant au mot-clé
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/tasks/search?keyword=${keyword}`, {
@@ -328,11 +328,11 @@ export class TaskService {
         const tasks = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(tasks) || !tasks.every(isTaskDto)) {
+        if (!Array.isArray(tasks) || !tasks.every(isTaskSummaryDto)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto[]",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
             );
         }
 
@@ -340,7 +340,7 @@ export class TaskService {
         return tasks;
     }
 
-    async searchTasksByPriority(boardId: string, priority: string, userPseudo: string): Promise<TaskDto[]> {
+    async searchTasksByPriority(boardId: string, priority: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie de la requête à Tomcat pour rechercher les tâches du tableau correspondant à la priorité
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/tasks/search?priority=${priority}`, {
@@ -374,11 +374,11 @@ export class TaskService {
         const tasks = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(tasks) || !tasks.every(isTaskDto)) {
+        if (!Array.isArray(tasks) || !tasks.every(isTaskSummaryDto)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto[]",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
             );
         }
 
@@ -386,7 +386,7 @@ export class TaskService {
         return tasks;
     }
 
-    async searchTasksByAssignedTo(boardId: string, assignedTo: string, userPseudo: string): Promise<TaskDto[]> {
+    async searchTasksByAssignedTo(boardId: string, assignedTo: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie de la requête à Tomcat pour rechercher les tâches du tableau correspondant à un utilisateur assigné
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/tasks/search?assignedTo=${assignedTo}`, {
@@ -420,11 +420,11 @@ export class TaskService {
         const tasks = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(tasks) || !tasks.every(isTaskDto)) {
+        if (!Array.isArray(tasks) || !tasks.every(isTaskSummaryDto)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskDto[]",
+                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
             );
         }
 

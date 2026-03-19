@@ -2,6 +2,8 @@ import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import {
   APIErrorCode,
   APIException,
+  BoardCreateRequest,
+  BoardUpdateRequest,
   InvitationCreateRequest,
   InvitationDto,
 } from "../../shared/types/mod.ts";
@@ -27,7 +29,7 @@ export class InvitationService {
                 "Content-Type": "application/json",
                 "X-User-Pseudo": ownerPseudo,
             },
-            body: JSON.stringify({pseudo: invitationRequest.pseudo}),
+            body: JSON.stringify({  }),
         });
 
         if (!response.ok) {

@@ -10,6 +10,7 @@
     "npm:@types/react-dom@^19.2.3": "19.2.3_@types+react@19.2.14",
     "npm:@types/react@^19.2.14": "19.2.14",
     "npm:@vitejs/plugin-react@^5.1.4": "5.1.4_vite@7.3.1__@types+node@24.12.0",
+    "npm:autoprefixer@^10.4.27": "10.4.27_postcss@8.5.8",
     "npm:class-variance-authority@~0.7.1": "0.7.1",
     "npm:clsx@^2.1.1": "2.1.1",
     "npm:eslint-plugin-react-hooks@^7.0.1": "7.0.1_eslint@9.39.4",
@@ -17,6 +18,7 @@
     "npm:eslint@^9.39.1": "9.39.4",
     "npm:globals@^16.5.0": "16.5.0",
     "npm:lucide-react@0.577": "0.577.0_react@19.2.4",
+    "npm:postcss@^8.5.8": "8.5.8",
     "npm:radix-ui@^1.4.3": "1.4.3_@types+react@19.2.14_@types+react-dom@19.2.3__@types+react@19.2.14_react@19.2.4_react-dom@19.2.4__react@19.2.4",
     "npm:react-dom@^19.2.0": "19.2.4_react@19.2.4",
     "npm:react-router@^7.13.1": "7.13.1_react@19.2.4_react-dom@19.2.4__react@19.2.4",
@@ -2189,6 +2191,18 @@
         "tslib"
       ]
     },
+    "autoprefixer@10.4.27_postcss@8.5.8": {
+      "integrity": "sha512-NP9APE+tO+LuJGn7/9+cohklunJsXWiaWEfV3si4Gi/XHDwVNgkwr1J3RQYFIvPy76GmJ9/bW8vyoU1LcxwKHA==",
+      "dependencies": [
+        "browserslist",
+        "caniuse-lite",
+        "fraction.js",
+        "picocolors",
+        "postcss",
+        "postcss-value-parser"
+      ],
+      "bin": true
+    },
     "balanced-match@1.0.2": {
       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="
     },
@@ -2817,6 +2831,9 @@
     },
     "forwarded@0.2.0": {
       "integrity": "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow=="
+    },
+    "fraction.js@5.3.4": {
+      "integrity": "sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ=="
     },
     "fresh@2.0.0": {
       "integrity": "sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A=="
@@ -3526,6 +3543,9 @@
         "cssesc",
         "util-deprecate"
       ]
+    },
+    "postcss-value-parser@4.2.0": {
+      "integrity": "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="
     },
     "postcss@8.5.8": {
       "integrity": "sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==",
@@ -4336,6 +4356,7 @@
         "npm:@types/react-dom@^19.2.3",
         "npm:@types/react@^19.2.14",
         "npm:@vitejs/plugin-react@^5.1.4",
+        "npm:autoprefixer@^10.4.27",
         "npm:class-variance-authority@~0.7.1",
         "npm:clsx@^2.1.1",
         "npm:eslint-plugin-react-hooks@^7.0.1",
@@ -4343,6 +4364,7 @@
         "npm:eslint@^9.39.1",
         "npm:globals@^16.5.0",
         "npm:lucide-react@0.577",
+        "npm:postcss@^8.5.8",
         "npm:radix-ui@^1.4.3",
         "npm:react-dom@^19.2.0",
         "npm:react-router@^7.13.1",
