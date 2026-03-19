@@ -1,19 +1,24 @@
 package com.example.servertomcat.task.dtos;
 
 import com.example.servertomcat.dtos.CommentDTO;
+import com.example.servertomcat.task.enums.Priority;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TaskDto {
-    private String id;
-    private String name;
+    private String idTask;
+    private String taskName;
     private String description;
-    private int order;
-    private Integer priority;
+    private int position;
+    private Priority priority;
     private LocalDate limitDate;
-    private String assignedToPseudo;
-    private String columnId;
-    private List<CommentDTO> comments;
+    private String assignedUserPseudo;
+    //private List<CommentDTO> comments;
 }

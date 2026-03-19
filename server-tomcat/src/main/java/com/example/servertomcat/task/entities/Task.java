@@ -1,38 +1,44 @@
 package com.example.servertomcat.task.entities;
 
-import com.example.servertomcat.BoardColumn.BoardColumn;
+import com.example.servertomcat.boardColumn.BoardColumn;
+import com.example.servertomcat.task.enums.Priority;
 import com.example.servertomcat.user.entities.User;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "TASK")
-@Getter
-@Setter
 public class Task {
     @Id
     @Column(name = "id_task", length = 36)
-    private String id;
+    private String idTask;
 
-    private String name;
+    @Column(name = "name", nullable = false, length = 100)
+    private String taskName;
+
+    @Column(name = "description", length = 1000)
     private String description;
 
-    @Column(name = "`order`", nullable = false)
-    private int order;
+    @Column(name = "position", nullable = false)
+    private int position;
 
-    private Integer priority;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority")
+    private Priority priority;
 
     @Column(name = "limit_date")
     private LocalDate limitDate;
 
     @ManyToOne
-    @JoinColumn(name = "pseudo")
-    private User assignedTo;
-
-    @ManyToOne
     @JoinColumn(name = "id_column", nullable = false)
     private BoardColumn column;
+
+    @ManyToOne
+    @JoinColumn(name = "pseudo")
+    private User assignedUser;
 }
