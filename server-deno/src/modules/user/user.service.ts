@@ -4,6 +4,7 @@ import {
   APIException,
   UserUpdateRequest,
   UserUpdatePasswordRequest,
+  UserDto,
 } from "../../shared/types/mod.ts";
 import {
   isUserDto,
@@ -205,4 +206,31 @@ export class UserService {
     // reponse 2**, on considère que la suppression a réussi et on retourne true
     return true;
   }
+
+  /**
+ * Récupère des suggestions d'utilisateurs par préfixe de pseudo
+ * @param pseudo le début du pseudo tapé
+ */
+async getAutocomplete(pseudo: string): Promise<UserDto[]> {
+  const response = await safeFetch(
+    `${URL_SERVER_TOMCAT}/api/users/autocomplete?pseudo=${pseudo}`,
+  );
+
+  if (!response.ok) {
+    throw new APIException(
+      APIErrorCode.INTERNAL_SERVER_ERROR,
+      500,
+      "Erreur interne Tomcat lors de l'autocomplete.",
+    );
+  }
+
+  const users = await response.json();
+
+  // Vérification que c'est bien un tableau de UserDto
+  if (!Array.isArray(users)) {
+      return [];
+  }
+
+  return users;
+}
 }

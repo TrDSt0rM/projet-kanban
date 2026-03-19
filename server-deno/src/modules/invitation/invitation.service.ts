@@ -27,7 +27,7 @@ export class InvitationService {
                 "Content-Type": "application/json",
                 "X-User-Pseudo": ownerPseudo,
             },
-            body: JSON.stringify({  }),
+            body: JSON.stringify({pseudo: invitationRequest.pseudo}),
         });
 
         if (!response.ok) {

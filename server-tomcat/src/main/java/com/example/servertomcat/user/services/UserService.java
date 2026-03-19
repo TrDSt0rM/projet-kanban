@@ -17,4 +17,5 @@ public interface UserService {
     List<UserDto> getAllUsers();
     void toggleActive(String userId);
     void updateRole(String pseudo, String newRole);
+    List<UserDto> getSuggestions(String prefix);
 }

@@ -8,9 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByPseudo(String pseudo);
+    List<User> findByPseudoStartingWithIgnoreCase(String pseudo);
 
     @Modifying
     @Transactional

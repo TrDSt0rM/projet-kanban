@@ -106,4 +106,13 @@ public class UserServiceImpl implements UserService {
         user.setUserRole(UserRole.valueOf(newRole.toUpperCase()));
         userRepository.save(user);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserDto> getSuggestions(String pseudo) {
+        return userRepository.findByPseudoStartingWithIgnoreCase(pseudo)
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
+    }
 }

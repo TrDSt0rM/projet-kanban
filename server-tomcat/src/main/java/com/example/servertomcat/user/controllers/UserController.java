@@ -82,4 +82,12 @@ public class UserController {
         userService.updateRole(pseudo, newRole);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/users/autocomplete")
+    public ResponseEntity<List<UserDto>> autocomplete(@RequestParam String pseudo) {
+        if (pseudo.length() < 2) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(userService.getSuggestions(pseudo));
+    }
 }
