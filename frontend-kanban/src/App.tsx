@@ -6,6 +6,8 @@ import { Register } from "./pages/Register.tsx";
 import { Dashboard } from "./pages/Dashboard.tsx";
 import { CreateBoard } from "./pages/CreateBoard.tsx";
 import { Profile } from "./pages/Profile.tsx";
+import { Admin } from "./pages/Admin.tsx";
+import { BoardDetail } from "./pages/BoardDetail.tsx";
 
 export interface User {
   pseudo: string;
@@ -54,7 +56,18 @@ function App() {
           path="/dashboard"
           element={
             user ? (
-              <Dashboard user={user} onLogout={handleLogout} boards={[]} />
+              <Dashboard user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+
+        <Route
+          path="/board/:boardId"
+          element={
+            user ? (
+              <BoardDetail user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )
@@ -79,6 +92,17 @@ function App() {
               <Profile user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
+            )
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            user && user.role === "ADMIN" ? (
+              <Admin user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/dashboard" />
             )
           }
         />

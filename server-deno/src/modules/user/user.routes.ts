@@ -55,7 +55,11 @@ router.get("/", async (ctx) => {
 
   // Vérifie que l'utilisateur est authentifié
   if (!userPseudo) {
-    throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    throw new APIException(
+      APIErrorCode.UNAUTHORIZED,
+      401,
+      "Utilisateur non authentifié",
+    );
   }
 
   const users: UserDto[] = await userService.getUser();
@@ -146,7 +150,6 @@ router.patch("/me/password", async (ctx) => {
  * @throws 500 si une erreur interne se produit lors de la suppression de l'utilisateur dans Tomcat
  */
 router.delete("/users/me", async (ctx) => {
-
   // Vérifie que l'utilisateur est autorisé à supprimer cet utilisateur
   const userPseudo = ctx.state.user.pseudo;
   if (!userPseudo) {
@@ -156,7 +159,7 @@ router.delete("/users/me", async (ctx) => {
       "Utilisateur non authentifié",
     );
   }
-  
+
   // Suppression de l'utilisateur en utilisant le service utilisateur et récupération du résultat de la suppression
   await userService.deleteUser(userPseudo);
 

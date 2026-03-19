@@ -11,56 +11,39 @@
 export interface UserDto {
   pseudo: string;
   role: string;
-  active: boolean;
+  isActive: boolean;
 }
 
-export interface UserUpdatePasswordRequest {
-  newPassword: string;
-}
-
-export interface UserUpdateRequest {
+export interface UpdateUserRequest {
   role?: string;
   isActive?: boolean;
+  password?: string;
 }
 
 /** =================================================
- * Interface Board
+ * Interface Main Entities
  ================================================= */
-export interface BoardCreateRequest {
-  boardName: string;
-}
-
-export interface BoardDetailDto {
-  idBoard: string;
-  boardName: string;
+export interface BoardDto {
+  id: string;
+  name: string;
   ownerPseudo: string;
   members: string[];
   columns: BoardColumnDto[];
 }
 
+export interface CreateBoardRequest {
+  name: string;
+}
+
+export interface UpdateBoardRequest {
+  name?: string;
+}
+
 export interface BoardMemberDto {
-  idBoard: string;
   pseudo: string;
-  memberRole: string;
+  role: string;
 }
 
-export interface BoardMemberUpdateRequest {
-  memberRole?: string;
-}
-
-export interface BoardSummaryDto {
-  idBoard: string;
-  boardName: string;
-  ownerPseudo: string;
-}
-
-export interface BoardUpdateRequest {
-  boardName?: string;
-}
-
-/** =================================================
- * Interface Column et Task
- ================================================= */
 export interface BoardColumnDto {
   id: string;
   name: string;

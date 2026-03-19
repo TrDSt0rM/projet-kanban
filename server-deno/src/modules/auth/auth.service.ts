@@ -18,9 +18,7 @@ import { mapTomcatToUserEntity, TomcatUserDto } from "./auth.mapper.ts";
 export class AuthService {
   constructor() {}
 
-  // connexion de l'utilisateur
   async login(pseudo: string, password: string) {
-    // recupération de l'utilisateur en base de données
     const response = await safeFetch(
       `${URL_SERVER_TOMCAT}/api/internal/auth/user?pseudo=${pseudo}`,
     );
@@ -54,7 +52,6 @@ export class AuthService {
       );
     }
 
-    // vérification de la validité du mot de passe
     const valid = await verifyPassword(password, user.password);
 
     if (!valid) {
@@ -77,7 +74,6 @@ export class AuthService {
   }
 
   async register(pseudo: string, password: string) {
-    // hachage du mot de passe avant enregistrement
     const hashedPassword = await hashPassword(password);
 
     const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/auth/register`, {
@@ -89,10 +85,18 @@ export class AuthService {
     });
 
     if (!response.ok) {
-        if (response.status === 409) {
-            throw new APIException(APIErrorCode.CONFLICT, 409, "Ce pseudo est déjà utilisé");
-        }
-        throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Échec de l'enregistrement");
+      if (response.status === 409) {
+        throw new APIException(
+          APIErrorCode.CONFLICT,
+          409,
+          "Ce pseudo est déjà utilisé",
+        );
+      }
+      throw new APIException(
+        APIErrorCode.BAD_REQUEST,
+        400,
+        "Échec de l'enregistrement",
+      );
     }
 
     return true;

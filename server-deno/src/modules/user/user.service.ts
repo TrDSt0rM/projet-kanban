@@ -5,7 +5,10 @@ import {
   UserUpdateRequest,
   UserUpdatePasswordRequest,
 } from "../../shared/types/mod.ts";
-import { isUserDto, isUserUpdatePasswordRequest } from "../../shared/utils/typeguards.ts";
+import {
+  isUserDto,
+  isUserUpdatePasswordRequest,
+} from "../../shared/utils/typeguards.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 import { hashPassword } from "../../shared/utils/crypto.utils.ts";
 
@@ -164,7 +167,7 @@ export class UserService {
         "Erreur interne Tomcat.",
       );
     }
-    
+
     // reponse 2**, on considère que la mise à jour a réussi et on retourne void
     return;
   }
@@ -175,15 +178,13 @@ export class UserService {
    * @returns renvoie true si la suppression a réussi, sinon lance une APIException avec un message d'erreur approprié
    */
   async deleteUser(pseudo: string) {
-
     // Envoie de la requête de suppression de l'utilisateur à Tomcat et récupération de la réponse
     const reponse = await safeFetch(`${URL_SERVER_TOMCAT}/api/users/me`, {
-        method: "DELETE",
-        headers: {
-          "X-User-Pseudo": pseudo,
-        },
+      method: "DELETE",
+      headers: {
+        "X-User-Pseudo": pseudo,
       },
-    );
+    });
 
     // reponse diffent de 2**, on traite l'erreur
     if (!reponse.ok) {
@@ -204,5 +205,4 @@ export class UserService {
     // reponse 2**, on considère que la suppression a réussi et on retourne true
     return true;
   }
-
 }
