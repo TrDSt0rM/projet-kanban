@@ -1,4 +1,4 @@
-package com.example.servertomcat.BoardColumn.dtos;
+package com.example.servertomcat.boardColumn.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -1,4 +1,4 @@
-package com.example.servertomcat.BoardColumn.dtos;
+package com.example.servertomcat.boardColumn.dtos;
 
 import com.example.servertomcat.task.dtos.TaskDto;
 import lombok.Data;

@@ -1,9 +1,9 @@
-package com.example.servertomcat.BoardColumn;
+package com.example.servertomcat.boardColumn;
 
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnCreateDto;
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnDto;
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnPositionDto;
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnUpdateDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnCreateDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnPositionDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnUpdateDto;
 import com.example.servertomcat.board.entities.Board;
 import com.example.servertomcat.board.enums.MemberRole;
 import com.example.servertomcat.board.repositories.BoardMemberRepository;

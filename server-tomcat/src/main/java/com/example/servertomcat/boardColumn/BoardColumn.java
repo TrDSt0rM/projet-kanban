@@ -1,4 +1,4 @@
-package com.example.servertomcat.BoardColumn;
+package com.example.servertomcat.boardColumn;
 
 import com.example.servertomcat.board.entities.Board;
 import com.example.servertomcat.task.entities.Task;

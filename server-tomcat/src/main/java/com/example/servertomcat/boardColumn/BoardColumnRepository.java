@@ -1,4 +1,4 @@
-package com.example.servertomcat.BoardColumn;
+package com.example.servertomcat.boardColumn;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

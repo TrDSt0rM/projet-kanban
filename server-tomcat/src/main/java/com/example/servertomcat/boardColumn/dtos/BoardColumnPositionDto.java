@@ -1,4 +1,4 @@
-package com.example.servertomcat.BoardColumn.dtos;
+package com.example.servertomcat.boardColumn.dtos;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

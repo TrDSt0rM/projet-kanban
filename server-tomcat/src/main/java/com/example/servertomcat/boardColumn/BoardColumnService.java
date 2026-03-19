@@ -1,9 +1,9 @@
-package com.example.servertomcat.BoardColumn;
+package com.example.servertomcat.boardColumn;
 
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnCreateDto;
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnDto;
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnPositionDto;
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnUpdateDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnCreateDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnPositionDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnUpdateDto;
 
 import java.util.List;
 
