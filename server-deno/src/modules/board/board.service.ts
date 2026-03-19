@@ -74,9 +74,15 @@ export class BoardService {
    * @param id l'id du tableau à récupérer
    * @returns renvoie le tableau correspondant à l'id si la récupération a réussi, sinon lance une APIException avec un message d'erreur approprié
    */
-  async getBoardById(id: string) {
+  async getBoardById(id: string, me: string) {
     const response = await safeFetch(
-      `${URL_SERVER_TOMCAT}/api/boards/user/${id}`,
+      `${URL_SERVER_TOMCAT}/api/boards/${id}`,{
+        method: "GET",
+        headers: {
+        "Content-Type": "application/json",
+        "X-User-Pseudo": me,
+      }},
+
     );
 
     if (!response.ok) {

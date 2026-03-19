@@ -17,16 +17,6 @@ export const router = new Router({ prefix: "/boards" });
 router.use(authMiddleware);
 
 /**
- * Récupère le tableau complet
- * @route GET /boards/:boardId/full
- */
-router.get("/:boardId/full", async (ctx) => {
-    const boardId = ctx.params.boardId!;
-    const board = await boardService.getBoardById(boardId); 
-    ctx.response.body = { success: true, data: board };
-});
-
-/**
  * Récupère tous les tableau d'un utilisateur à partir de son pseudo (propriétaire ou collaborateur)
  * @route GET /boards
  * @param pseudo le pseudo de l'utilisateur dont on veut récupérer les tableaux
@@ -67,8 +57,18 @@ router.get("/", async (ctx) => {
  */
 router.get("/:boardId", async (ctx) => {
     const boardId = ctx.params.boardId!;
-    const board = await boardService.getBoardById(boardId);
+    const userPseudo = ctx.state.user?.pseudo;
 
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    // Récupération du tableau depuis le service avec l'id du tableau
+    const board = await boardService.getBoardById(boardId, userPseudo);
+    
+    
+    // Construction de la réponse
     const responseBody : APIResponse<BoardDetailDto> = {
         success: true,
         data: board,
@@ -246,9 +246,3 @@ router.delete("/:id/members/:memberPseudo", async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });    
-
-router.get("/:boardId", async (ctx) => {
-    const boardId = ctx.params.boardId!;
-    const board = await boardService.getBoardById(boardId);
-    ctx.response.body = { success: true, data: board };
-});
