@@ -63,7 +63,7 @@ router.post("/invitations/:boardId/accept", async (ctx) => {
         success: true,
         data: null,
     }
-    ctx.response.status = 204;
+    ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
 

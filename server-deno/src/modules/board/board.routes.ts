@@ -186,38 +186,8 @@ router.delete("/:id", async (ctx) => {
 });
 
 /**
- * Récupère les membres d'un tableau à partir de l'id du tableau
- * @route GET /boards/:id/members
- * @param id l'id du tableau dont on veut récupérer les membres
- * @returns les membres du tableau correspondant à l'id
- * @throws 404 si aucun tableau ne correspond à l'id
- * @throws 500 si une erreur interne se produit lors de la récupération des membres depuis Tomcat
- * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardMemberDto
- */
-router.get("/:id/members", async (ctx) => {
-    const boardId = ctx.params.id!;
-    const userPseudo = ctx.state.user?.pseudo;
-
-    // Vérification que le pseudo de l'utilisateur est présent dans le contexte
-    if (!userPseudo) {
-        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
-    }
-    
-    // Récupération des membres du tableau en utilisant le service de tableau et récupération des membres
-    const members = await boardService.getBoardMembers(boardId, userPseudo);
-
-    const responseBody : APIResponse<BoardMemberDto[]> = {
-        success: true,
-        data: members,
-    };
-
-    ctx.response.status = 200;
-    ctx.response.body = responseBody;
-});
-
-/**
  * Supprime un membre d'un tableau à partir de l'id du tableau et du pseudo de l'utilisateur à supprimer. Seul le propriétaire du tableau peut supprimer un membre.
- * @route DELETE /boards/:id/members/:userPseudo
+ * @route DELETE /boards/:id/members/:memberPseudo
  * @param id l'id du tableau dont on veut supprimer un membre
  * @param userPseudo le pseudo de l'utilisateur à supprimer du tableau
  * @returns null si la suppression a réussi, sinon lance une APIException avec un message d'erreur approprié
