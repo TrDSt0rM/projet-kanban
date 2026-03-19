@@ -71,6 +71,39 @@ router.patch("/users/:pseudo", adminOnlyMiddleware, async (ctx) => {
 });
 
 /**
+ * PATCH /admin/users/:pseudo/role - Modifier le rôle d'un utilisateur
+ * @param pseudo le pseudo de l'utilisateur à modifier
+ * @param body les données à modifier (role)
+ * @returns les informations mises à jour de l'utilisateur
+ * @throws 401 si l'utilisateur n'est pas authentifié ou n'est pas admin
+ * @throws 404 si l'utilisateur cible n'existe pas
+ * @throws 500 si une erreur interne se produit lors de la mise à jour du rôle depuis Tomcat
+ */
+router.patch("/users/:pseudo/role", adminOnlyMiddleware, async (ctx) => {
+    const targetPseudo = ctx.params.pseudo!;
+
+    // Vérification de l'authentification de l'utilisateur
+    const adminPseudo = ctx.state.user?.pseudo;
+    if (!adminPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    // Récupération des données de la requête
+    const data = await ctx.request.body.json();
+
+    // Mise à jour du rôle de l'utilisateur depuis le service
+    const updatedUser = await adminService.updateRole(targetPseudo, data);
+
+    // Construction de la réponse
+    const responseBody: APIResponse<UserDto> = {
+        success: true,
+        data: updatedUser,
+    };
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
+/**
  * DELETE /admin/users/:pseudo - Supprimer un utilisateur
  * @param pseudo le pseudo de l'utilisateur à supprimer
  * @returns une réponse indiquant la suppression réussie
@@ -99,10 +132,3 @@ router.delete("/users/:pseudo", adminOnlyMiddleware, async (ctx) => {
     ctx.response.body = responseBody;
 });
 
-router.patch("/users/:pseudo/role", adminOnlyMiddleware, async (ctx) => {
-    const targetPseudo = ctx.params.pseudo!;
-    const { role } = await ctx.request.body.json();
-    await adminService.updateRole(targetPseudo, role);
-    ctx.response.status = 200;
-    ctx.response.body = { success: true };
-});
