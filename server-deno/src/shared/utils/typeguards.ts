@@ -18,6 +18,11 @@ import {
   BoardUpdateRequest,
   UserUpdateRequest,
   UserUpdatePasswordRequest,
+  BoardColumnCreateRequest,
+  BoardColumnUpdatePositionRequest,
+  BoardColumnUpdateRequest,
+  InvitationCreateRequest,
+  InvitationDto,
 } from "../types/mod.ts";
 import { LoginDto, RegisterDto } from "../../modules/auth/auth.types.ts";
 
@@ -142,7 +147,7 @@ export function isBoardUpdateRequest(obj: unknown): obj is BoardUpdateRequest {
 }
 
 /* ==================================================
- * Type guards pour les DTOs les colonnes et les tâches
+ * Type guards pour les DTOs les colonnes
  ================================================= */
 
 export function isBoardColumnDto(obj: unknown): obj is BoardColumnDto {
@@ -160,6 +165,55 @@ export function isBoardColumnDto(obj: unknown): obj is BoardColumnDto {
     obj.tasks.every(isTaskDto)
   );
 }
+
+export function isBoardColumnCreateRequest(obj: unknown): obj is BoardColumnCreateRequest {
+    return !!obj &&
+    typeof obj === "object" &&
+    "columnName" in obj &&
+    typeof obj.columnName === "string";
+}
+
+export function isBoardColumnPositionUpdateRequest(obj: unknown): obj is BoardColumnUpdatePositionRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "position" in obj && 
+    typeof obj.position === "number";
+}
+
+export function isBoardColumnUpdateRequest(obj: unknown): obj is BoardColumnUpdateRequest {
+    return !!obj &&
+    typeof obj === "object" &&
+    "columnName" in obj &&
+    typeof obj.columnName === "string";
+}
+
+export function isInvitationCreateDto(obj: unknown): obj is InvitationCreateRequest {
+    return !!obj &&
+    typeof obj === "object" &&
+    "pseudo" in obj &&
+    typeof obj.pseudo === "string";
+}
+
+export function isInvitationDto(obj: unknown): obj is InvitationDto {
+    return (
+        !!obj &&
+        typeof obj === "object" &&
+        "pseudo" in obj &&
+        typeof obj.pseudo === "string" &&
+        "idBoard" in obj &&
+        typeof obj.idBoard === "string" &&
+        "boardName" in obj &&
+        typeof obj.boardName === "string" &&
+        "ownerPseudo" in obj &&
+        typeof obj.ownerPseudo === "string" &&
+        "status" in obj &&
+        typeof obj.status === "string"
+    );
+}
+
+/* ==================================================
+ * Type guards pour les DTOs de tâche
+ ================================================= */
 
 export function isTaskDto(obj: unknown): obj is TaskDto {
   return (

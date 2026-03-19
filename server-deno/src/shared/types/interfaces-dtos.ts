@@ -9,77 +9,107 @@
  * Interface User
  ================================================= */
 export interface UserDto {
-  pseudo: string;
-  role: string;
-  active: boolean;
+    pseudo: string;
+    role : string;
+    active: boolean;
 }
 
 export interface UserUpdatePasswordRequest {
-  newPassword: string;
+    newPassword: string;
 }
 
 export interface UserUpdateRequest {
-  role?: string;
-  isActive?: boolean;
+    role?: string;
+    isActive?: boolean;
 }
 
 /** =================================================
  * Interface Board
  ================================================= */
 export interface BoardCreateRequest {
-  boardName: string;
+    boardName: string;
 }
 
 export interface BoardDetailDto {
-  idBoard: string;
-  boardName: string;
-  ownerPseudo: string;
-  members: string[];
-  columns: BoardColumnDto[];
+    idBoard: string;
+    boardName: string;
+    ownerPseudo: string;
+    members: string[];
+    columns: BoardColumnDto[];
 }
 
 export interface BoardMemberDto {
-  idBoard: string;
-  pseudo: string;
-  memberRole: string;
+    idBoard: string;
+    pseudo: string;
+    memberRole: string;
 }
 
 export interface BoardMemberUpdateRequest {
-  memberRole?: string;
+    memberRole?: string;
 }
 
 export interface BoardSummaryDto {
-  idBoard: string;
-  boardName: string;
-  ownerPseudo: string;
+    idBoard: string;
+    boardName: string;
+    ownerPseudo: string;
 }
 
 export interface BoardUpdateRequest {
-  boardName?: string;
+    boardName?: string;
 }
 
 /** =================================================
- * Interface Column et Task
+ * Interface Column
  ================================================= */
-export interface BoardColumnDto {
-  id: string;
-  name: string;
-  position: number;
-  tasks: TaskDto[];
+export interface BoardColumnCreateRequest {
+    columnName: string;
 }
 
+export interface BoardColumnDto {
+    idColumn: string;
+    columnName: string;
+    position: number;
+    tasks: TaskDto[];
+}
+
+export interface BoardColumnUpdatePositionRequest {
+    newPosition: number;
+}
+
+export interface BoardColumnUpdateRequest {
+    columnName?: string;
+}
+
+/* ==================================================
+ * Interface Task
+ ================================================= */
 export interface TaskDto {
-  id: string;
-  title: string;
-  description: string;
-  position: number;
-  priority: string;
-  expectedCompletionDate?: string;
-  assignedTo?: string;
+    id: string;
+    title: string;
+    description: string;
+    position: number;
+    priority: string;
+    expectedCompletionDate?: string;
+    assignedTo?: string;
 }
 
 export interface CommentDtos {
-  id: string;
-  taskId: string;
-  content: string;
+    id: string;
+    taskId: string;
+    content: string; 
+}
+
+/** =================================================
+ * Interface Invitation
+ ================================================= */
+export interface InvitationCreateRequest {
+    pseudo: string;
+}
+
+export interface InvitationDto {
+    pseudo: string;
+    idBoard: string;
+    boardName: string;
+    ownerPseudo: string;
+    status: string; // InvitationStatus
 }
