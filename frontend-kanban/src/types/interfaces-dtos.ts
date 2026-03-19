@@ -142,5 +142,5 @@ export interface InvitationDto {
     idBoard: string;
     boardName: string;
     ownerPseudo: string;
-    status: string; // InvitationStatus
+    status: string;
 }
