@@ -3,6 +3,9 @@ import { oakCors } from "@tajpouria/cors";
 import { router as adminRouter } from "./src/modules/admin/admin.routes.ts";
 import { router as authRouter } from "./src/modules/auth/auth.routes.ts";
 import { router as boardRouter } from "./src/modules/board/board.routes.ts";
+import { router as boardColumnRouter } from "./src/modules/boardColumn/boardColumn.routes.ts";
+import { router as invitationRouter } from "./src/modules/invitation/invitation.routes.ts";
+import { router as taskRouter } from "./src/modules/task/task.routes.ts";
 import { router as userRouter } from "./src/modules/user/user.routes.ts";
 import { errorMiddleware } from "./src/shared/middlewares/error.middleware.ts";
 
@@ -30,6 +33,9 @@ app.use(errorMiddleware);
 app.use(adminRouter.routes(), adminRouter.allowedMethods());
 app.use(authRouter.routes(), authRouter.allowedMethods());
 app.use(boardRouter.routes(), boardRouter.allowedMethods());
+app.use(boardColumnRouter.routes(), boardColumnRouter.allowedMethods());
+app.use(invitationRouter.routes(), invitationRouter.allowedMethods());
+app.use(taskRouter.routes(), taskRouter.allowedMethods());
 app.use(userRouter.routes(), userRouter.allowedMethods());
 
 // ---------- Démarrage du Serveur --------------------------
