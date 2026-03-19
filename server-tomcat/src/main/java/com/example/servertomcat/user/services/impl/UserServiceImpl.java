@@ -4,6 +4,7 @@ import com.example.servertomcat.user.dtos.UserAuthDto;
 import com.example.servertomcat.user.dtos.UserDto;
 import com.example.servertomcat.user.dtos.UserRegisterDto;
 import com.example.servertomcat.user.entities.User;
+import com.example.servertomcat.user.entities.UserRole;
 import com.example.servertomcat.user.mappers.UserMapper;
 import com.example.servertomcat.user.repositories.UserRepository;
 import com.example.servertomcat.user.services.UserService;
@@ -86,16 +87,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void toggleActive(String userPseudo) {
-        User user = findUserByPseudo(userPseudo);
-        user.setActive(!user.isActive());
-        userRepository.save(user);
+        User user = userRepository.findById(userPseudo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé"));
+        userRepository.updateActivationStatus(userPseudo, !user.isActive());
     }
 
-    // Méthode privée pour éviter la duplication du findById + orElseThrow
     private User findUserByPseudo(String userPseudo) {
         return userRepository.findById(userPseudo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Utilisateur introuvable"));
+    }
+
+    @Override
+    public void updateRole(String pseudo, String newRole) {
+        User user = findUserByPseudo(pseudo);
+        user.setUserRole(UserRole.valueOf(newRole.toUpperCase()));
+        userRepository.save(user);
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Data
 @NoArgsConstructor
@@ -12,10 +13,10 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    @Column(nullable = false, length = 50)
+    @Column(name = "pseudo", length = 50, nullable = false, updatable = false)
     private String pseudo;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -25,5 +26,4 @@ public class User {
     @Column(name = "isActive")
     @JsonProperty("isActive")
     private boolean isActive = true;
-
 }

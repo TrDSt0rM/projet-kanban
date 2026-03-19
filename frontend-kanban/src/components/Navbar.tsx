@@ -5,7 +5,6 @@ import {
   Plus,
   LogOut,
   User as UserIcon,
-  Settings,
   ChevronDown,
 } from "lucide-react";
 import { User } from "@/App";
@@ -108,11 +107,6 @@ export function Navbar({ user, onLogout }: NavbarProps) {
               >
                 <UserIcon className="size-4" />
                 Mon Profil
-              </button>
-
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <Settings className="size-4" />
-                Paramètres
               </button>
 
               <div className="h-px bg-gray-100 my-1"></div>

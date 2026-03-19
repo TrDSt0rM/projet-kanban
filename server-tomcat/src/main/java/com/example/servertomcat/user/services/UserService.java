@@ -16,4 +16,5 @@ public interface UserService {
     // Admin (il peut aussi delete n'importe quel USER qui n'est pas admin)
     List<UserDto> getAllUsers();
     void toggleActive(String userId);
+    void updateRole(String pseudo, String newRole);
 }

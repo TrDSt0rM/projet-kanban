@@ -63,7 +63,9 @@ public class UserController {
     }
 
     @PatchMapping("/admin/users/{pseudo}/activate")
-    public ResponseEntity<Void> toggleActive(@PathVariable String pseudo) {
+    public ResponseEntity<Void> toggleActive(
+            @PathVariable String pseudo,
+            @RequestBody(required = false) java.util.Map<String, Object> body) {
         userService.toggleActive(pseudo);
         return ResponseEntity.noContent().build();
     }
@@ -74,4 +76,10 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/admin/users/{pseudo}/role")
+    public ResponseEntity<Void> updateRole(@PathVariable String pseudo, @RequestBody java.util.Map<String, String> body) {
+        String newRole = body.get("role");
+        userService.updateRole(pseudo, newRole);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -98,3 +98,11 @@ router.delete("/users/:pseudo", adminOnlyMiddleware, async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
+
+router.patch("/users/:pseudo/role", adminOnlyMiddleware, async (ctx) => {
+    const targetPseudo = ctx.params.pseudo!;
+    const { role } = await ctx.request.body.json();
+    await adminService.updateRole(targetPseudo, role);
+    ctx.response.status = 200;
+    ctx.response.body = { success: true };
+});
