@@ -17,6 +17,16 @@ export const router = new Router({ prefix: "/boards" });
 router.use(authMiddleware);
 
 /**
+ * Récupère le tableau complet
+ * @route GET /boards/:boardId/full
+ */
+router.get("/:boardId/full", async (ctx) => {
+    const boardId = ctx.params.boardId!;
+    const board = await boardService.getBoardById(boardId); 
+    ctx.response.body = { success: true, data: board };
+});
+
+/**
  * Récupère tous les tableau d'un utilisateur à partir de son pseudo (propriétaire ou collaborateur)
  * @route GET /boards
  * @param pseudo le pseudo de l'utilisateur dont on veut récupérer les tableaux
@@ -236,3 +246,9 @@ router.delete("/:id/members/:memberPseudo", async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });    
+
+router.get("/:boardId", async (ctx) => {
+    const boardId = ctx.params.boardId!;
+    const board = await boardService.getBoardById(boardId);
+    ctx.response.body = { success: true, data: board };
+});

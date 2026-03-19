@@ -18,10 +18,9 @@ interface NavbarProps {
 
 export function Navbar({ user, onLogout }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [invitCount, setInvitCount] = useState(0); // État pour le nombre d'invitations
+  const [invitCount, setInvitCount] = useState(0); 
   const navigate = useNavigate();
 
-  // Récupérer le nombre d'invitations au montage
   useEffect(() => {
     if (!user) return;
 

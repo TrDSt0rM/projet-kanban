@@ -208,74 +208,31 @@ router.patch("/tasks/:taskId/assign", async (ctx) => {
     ctx.response.body = responseBody;
 });
 
-router.get("/boards/:boardId/tasks/search?keyword=:keyword", async (ctx) => {
+router.get("/boards/:boardId/tasks/search", async (ctx) => {
     const boardId = ctx.params.boardId!;
-    const keyword = ctx.params.keyword!;
     const userPseudo = ctx.state.user?.pseudo;
 
-    // Vérification de l'authentification de l'utilisateur
     if (!userPseudo) {
         throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
     }
 
-    // Récupération des tâches du tableau depuis le service
-    const tasks = await taskService.searchTasksByKeyword(boardId, keyword, userPseudo);
+    const keyword = ctx.request.url.searchParams.get("keyword");
+    const priority = ctx.request.url.searchParams.get("priority");
+    const assignedTo = ctx.request.url.searchParams.get("assignedTo");
 
-    // Construction de la réponse
-    const responseBody : APIResponse<TaskDto[]> = {
-        success: true,
-        data: tasks,
+    let tasks: TaskDto[] = []; 
+
+    if (keyword) {
+        tasks = await taskService.searchTasksByKeyword(boardId, keyword, userPseudo);
+    } else if (priority) {
+        tasks = await taskService.searchTasksByPriority(boardId, priority, userPseudo);
+    } else if (assignedTo) {
+        tasks = await taskService.searchTasksByAssignedTo(boardId, assignedTo, userPseudo);
     }
-    
-    // Envoi de la réponse
+
     ctx.response.status = 200;
-    ctx.response.body = responseBody;
-});
-
-router.get("/boards/:boardId/tasks/search?priority=:priority", async (ctx) => {
-    const boardId = ctx.params.boardId!;
-    const priority = ctx.params.priority!;
-    const userPseudo = ctx.state.user?.pseudo;
-    
-    // Vérification de l'authentification de l'utilisateur
-    if (!userPseudo) {
-        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
-    }
-
-    // Récupération des tâches du tableau depuis le service
-    const tasks = await taskService.searchTasksByPriority(boardId, priority, userPseudo);
-    
-    // Construction de la réponse
-    const responseBody : APIResponse<TaskDto[]> = {
-        success: true,
-        data: tasks,
-    }
-    
-    // Envoi de la réponse
-    ctx.response.status = 200;
-    ctx.response.body = responseBody;
-});
-
-router.get("/boards/:boardId/tasks/search?assignedTo=:assignedTo", async (ctx) => {
-    const boardId = ctx.params.boardId!;
-    const assignedTo = ctx.params.assignedTo!;
-    const userPseudo = ctx.state.user?.pseudo;
-
-    // Vérification de l'authentification de l'utilisateur
-    if (!userPseudo) {
-        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
-    }
-
-    // Récupération des tâches du tableau depuis le service
-    const tasks = await taskService.searchTasksByAssignedTo(boardId, assignedTo, userPseudo);
-    
-    // Construction de la réponse
-    const responseBody : APIResponse<TaskDto[]> = {
-        success: true,
-        data: tasks,
-    }
-    
-    // Envoi de la réponse
-    ctx.response.status = 200;
-    ctx.response.body = responseBody;
+    ctx.response.body = { 
+        success: true, 
+        data: tasks 
+    };
 });

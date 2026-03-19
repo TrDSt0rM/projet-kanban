@@ -21,7 +21,7 @@ export class InvitationService {
             );
         }
 
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/invitations`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/invitations`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -62,7 +62,7 @@ export class InvitationService {
     }
 
     async getInvitationsByUserPseudo(userPseudo: string): Promise<InvitationDto[]> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/invitations`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/invitations`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export class InvitationService {
     }
 
     async acceptInvitation(boardId: string, userPseudo: string): Promise<void> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/invitations/${boardId}/accept`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/invitations/${boardId}/accept`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -120,7 +120,7 @@ export class InvitationService {
     }
 
     async declineInvitation(boardId: string, userPseudo: string): Promise<void> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/invitations/${boardId}/decline`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/invitations/${boardId}/decline`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -148,7 +148,7 @@ export class InvitationService {
     }
 
     async cancelInvitation(boardId: string, userPseudoToCancel: string, requesterPseudo: string): Promise<void> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/invitations/${userPseudoToCancel}`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/invitations/${userPseudoToCancel}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
