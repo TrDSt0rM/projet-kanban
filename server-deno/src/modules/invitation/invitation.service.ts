@@ -2,8 +2,7 @@ import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import {
   APIErrorCode,
   APIException,
-  BoardCreateRequest,
-  BoardUpdateRequest,
+
   InvitationCreateRequest,
   InvitationDto,
 } from "../../shared/types/mod.ts";
