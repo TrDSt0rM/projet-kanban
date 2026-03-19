@@ -7,5 +7,5 @@ package com.example.servertomcat.board.enums;
  */
 public enum MemberRole {
     OWNER,
-    MEMBER,
+    PARTICIPANT,
 }
