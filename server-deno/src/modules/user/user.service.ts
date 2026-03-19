@@ -227,7 +227,7 @@ async getAutocomplete(pseudo: string): Promise<UserDto[]> {
   const users = await response.json();
 
   // Vérification que c'est bien un tableau de UserDto
-  if (!Array.isArray(users)) {
+  if (!Array.isArray(users) || !users.every(isUserDto)) {
       return [];
   }
 
