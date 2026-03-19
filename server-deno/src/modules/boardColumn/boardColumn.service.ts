@@ -8,6 +8,7 @@ import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import { APIException, APIErrorCode, BoardColumnUpdateRequest, BoardColumnUpdatePositionRequest, BoardColumnCreateRequest } from "../../shared/types/mod.ts";
 import { BoardColumnDto } from "../../shared/types/mod.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
+import { isBoardColumnCreateRequest, isBoardColumnDto, isBoardColumnPositionUpdateRequest, isBoardColumnUpdateRequest } from "../../shared/utils/typeguards.ts";
 
 export class BoardColumnService {
     constructor() {}
@@ -57,7 +58,75 @@ export class BoardColumnService {
         return columns;
     }
 
+    /**
+     * Crée une nouvelle colonne dans un tableau
+     * @param boardId l'id du tableau
+     * @param request les données de la colonne (BoardColumnCreateRequest)
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns la colonne créée
+     */
+    async createColumn(boardId: string, request: BoardColumnCreateRequest, userPseudo: string): Promise<BoardColumnDto> {
+
+        // Validation des données de création
+        if(!isBoardColumnCreateRequest(request)) {
+            throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de création de colonne invalides");
+        }
+
+        // Appel à Tomcat pour créer la colonne
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/columns`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-User-Pseudo": userPseudo
+            },
+            body: JSON.stringify(request),
+        });
+
+        // reponse différent de 2**, on traite l'erreur
+        if (!response.ok) {
+            if (response.status === 403) {
+                throw new APIException(
+                    APIErrorCode.FORBIDDEN, 
+                    403, 
+                    "Vous n'avez pas les droits pour ajouter une colonne à ce tableau"
+                );
+            }
+            throw new APIException(
+                APIErrorCode.INTERNAL_SERVER_ERROR, 
+                response.status, 
+                "Erreur lors de la création de la colonne sur Tomcat"
+            );
+        }
+
+        // reponse 2**, on parse la colonne créée
+        const newColumn = await response.json();
+        if (!isBoardColumnDto(newColumn)) {
+            throw new APIException(
+                APIErrorCode.INTERNAL_SERVER_ERROR, 
+                500, 
+                "Données de création invalides retournées par Tomcat"
+            );
+        }
+
+        // on retourne la colonne créée
+        return newColumn;
+    }
+
+    /**
+     * Modifie une colonne à partir de son id
+     * @param columnId l'id de la colonne à modifier
+     * @param data les données de la colonne à modifier (nom)
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns la colonne modifiée
+     */
     async updateColumn(columnId: string, data: BoardColumnUpdateRequest, userPseudo: string): Promise<BoardColumnDto> {
+
+        // Validation des données de mise à jour
+        if(!isBoardColumnUpdateRequest(data)) {
+            throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de mise à jour invalides");
+        }
+
+        // Appel à Tomcat pour modifier la colonne
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/columns/${columnId}`, {
             method: "PUT",
             headers: { 
@@ -67,79 +136,129 @@ export class BoardColumnService {
             body: JSON.stringify(data),
         });
 
-        if (!response.ok) throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, response.status, "Erreur modification colonne");
-        return await response.json();
+        // reponse différent de 2**, on traite l'erreur
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue ou accès refusé");
+            } else if (response.status === 403) {
+                throw new APIException(
+                    APIErrorCode.FORBIDDEN,
+                    403,
+                    "Accès refusé, vous n'êtes pas membre du tableau auquel appartient la colonne",
+                );
+            } else {
+                throw new APIException(
+                    APIErrorCode.INTERNAL_SERVER_ERROR,
+                    500,
+                    "Erreur lors de la modification de la colonne",
+                );
+            }
+        }
+
+        // reponse 2**, on parse la colonne modifiée
+        const updatedColumn = await response.json();
+        if(!isBoardColumnDto(updatedColumn)) {
+            throw new APIException(
+                APIErrorCode.INTERNAL_SERVER_ERROR,
+                500,
+                "Données retournées par Tomcat non conformes à BoardColumnDto",
+            );
+        }
+
+        // on retourne la colonne modifiée
+        return updatedColumn;
     }
 
-    async updateColumnPosition(columnId: string, data: BoardColumnUpdatePositionRequest, userPseudo: string): Promise<void> {
+    /**
+     * Modifie la position d'une colonne à partir de son id
+     * @param columnId l'id de la colonne à modifier
+     * @param position les données de la colonne à modifier (nouvelle position)
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @return void
+     */
+    async updateColumnPosition(columnId: string, position: BoardColumnUpdatePositionRequest, userPseudo: string): Promise<BoardColumnDto> {
+
+        // Validation des données de mise à jour de position
+        if (!isBoardColumnPositionUpdateRequest(position)) {
+            throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de mise à jour de position invalides");
+        }
+
+        // Appel à Tomcat pour modifier la position de la colonne
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/columns/${columnId}/position`, {
             method: "PATCH",
             headers: { 
                 "Content-Type": "application/json",
                 "X-User-Pseudo": userPseudo 
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(position),
         });
 
-        if (!response.ok) throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, response.status, "Erreur position colonne");
+        // reponse différent de 2**, on traite l'erreur
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue ou accès refusé");
+            } else if (response.status === 403) {
+                throw new APIException(
+                    APIErrorCode.FORBIDDEN,
+                    403,
+                    "Accès refusé, vous n'êtes pas membre du tableau auquel appartient la colonne",
+                );
+            } else {
+                throw new APIException(
+                    APIErrorCode.INTERNAL_SERVER_ERROR,
+                    500,
+                    "Erreur lors de la modification de la position de la colonne",
+                );
+            }
+        }
+
+        // reponse 2**, on parse la colonne modifiée
+        const updatedColumn = await response.json();
+        if(!isBoardColumnDto(updatedColumn)) {
+            throw new APIException(
+                APIErrorCode.INTERNAL_SERVER_ERROR,
+                500,
+                "Données retournées par Tomcat non conformes à BoardColumnDto",
+            );
+        }
+
+        // on retourne la colonne modifiée
+        return updatedColumn;
     }
 
+    /**
+     * Supprime une colonne à partir de son id
+     * @param columnId l'id de la colonne à supprimer
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     */
     async deleteColumn(columnId: string, userPseudo: string): Promise<void> {
+        
+        // Appel à Tomcat pour supprimer la colonne
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/columns/${columnId}`, {
             method: "DELETE",
             headers: { "X-User-Pseudo": userPseudo }
         });
 
-        if (!response.ok) throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, response.status, "Erreur suppression colonne");
-    }
-
-    /**
- * Crée une nouvelle colonne dans un tableau
- * @param boardId l'id du tableau
- * @param data les données de la colonne (BoardColumnCreateRequest)
- * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
- * @returns la colonne créée
- */
-async createColumn(
-    boardId: string, 
-    data: BoardColumnCreateRequest, 
-    userPseudo: string
-): Promise<BoardColumnDto> {
-
-    const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/columns`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-User-Pseudo": userPseudo
-        },
-        body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-        if (response.status === 403) {
-            throw new APIException(
-                APIErrorCode.FORBIDDEN, 
-                403, 
-                "Vous n'avez pas les droits pour ajouter une colonne à ce tableau"
-            );
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue ou accès refusé");
+            } else if (response.status === 403) {
+                throw new APIException(
+                    APIErrorCode.FORBIDDEN,
+                    403,
+                    "Accès refusé, vous n'êtes pas membre du tableau auquel appartient la colonne",
+                );
+            } else {
+                throw new APIException(
+                    APIErrorCode.INTERNAL_SERVER_ERROR,
+                    500,
+                    "Erreur lors de la suppression de la colonne",
+                );
+            }
         }
-        throw new APIException(
-            APIErrorCode.INTERNAL_SERVER_ERROR, 
-            response.status, 
-            "Erreur lors de la création de la colonne sur Tomcat"
-        );
+
+        // reponse 2**, on ne retourne rien
+        return;        
     }
 
-    const newColumn = await response.json();
-
-    if (!newColumn || !newColumn.idColumn) {
-        throw new APIException(
-            APIErrorCode.INTERNAL_SERVER_ERROR, 
-            500, 
-            "Données de création invalides retournées par Tomcat"
-        );
-    }
-
-    return newColumn;
-}
 }
