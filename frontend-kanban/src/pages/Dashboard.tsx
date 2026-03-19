@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { User } from "@/App";
 import { Navbar } from "@/components/Navbar";
-import { Layout, Loader2, Plus } from "lucide-react";
+import { Layout, Loader2 } from "lucide-react";
 
 interface Board {
   id_board: string;
@@ -53,13 +53,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             <h1 className="text-3xl font-bold text-gray-900">Mes Tableaux</h1>
             <p className="text-gray-500">Sélectionnez un espace de travail</p>
           </div>
-
-          <button
-            onClick={() => navigate("/dashboard/new")}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-all shadow-lg shadow-blue-100"
-          >
-            <Plus className="size-5" /> Nouveau
-          </button>
         </div>
 
         {isLoading ? (

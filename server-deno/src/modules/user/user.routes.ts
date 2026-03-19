@@ -149,7 +149,7 @@ router.patch("/me/password", async (ctx) => {
  * @throws 403 si l'utilisateur n'est pas autorisé à supprimer cet utilisateur
  * @throws 500 si une erreur interne se produit lors de la suppression de l'utilisateur dans Tomcat
  */
-router.delete("/users/me", async (ctx) => {
+router.delete("/me", async (ctx) => {
   // Vérifie que l'utilisateur est autorisé à supprimer cet utilisateur
   const userPseudo = ctx.state.user.pseudo;
   if (!userPseudo) {

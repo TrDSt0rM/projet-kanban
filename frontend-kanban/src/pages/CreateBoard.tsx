@@ -28,7 +28,7 @@ export function CreateBoard({ user, onLogout }: CreateBoardProps) {
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          name: name.trim(),
+          boardName: name.trim(),
         }),
       });
 

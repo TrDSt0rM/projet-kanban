@@ -52,27 +52,22 @@ export function Profile({
     setIsLoading(true);
 
     try {
-      // CORRECTION : L'URL pointait vers /password (404), on utilise la route PUT /users/:pseudo
-      const response = await fetch(
-        `http://localhost:8000/users/${user.pseudo}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({
-            password: password,
-          }),
+      const response = await fetch(`http://localhost:8000/users/me/password`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
         },
-      );
+        body: JSON.stringify({
+          newPassword: password,
+        }),
+      });
 
       if (response.ok) {
         setMessage({
           type: "success",
           text: "Mot de passe mis à jour ! Reconnexion obligatoire...",
         });
-        // On force la déconnexion après 2.5 secondes
         setTimeout(onLogout, 2500);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -101,19 +96,14 @@ export function Profile({
     setMessage(null);
 
     try {
-      // Requête DELETE à Deno (port 8000)
-      const response = await fetch(
-        `http://localhost:8000/users/${user.pseudo}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
+      const response = await fetch(`http://localhost:8000/users/me`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
         },
-      );
+      });
 
       if (response.ok) {
-        // Suppression réussie -> déconnexion et retour à l'accueil
         alert("Votre compte a été supprimé avec succès.");
         onLogout();
         navigate("/");
