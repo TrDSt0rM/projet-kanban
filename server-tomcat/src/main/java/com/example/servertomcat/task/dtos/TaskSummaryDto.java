@@ -1,13 +1,11 @@
 package com.example.servertomcat.task.dtos;
 
-import com.example.servertomcat.dtos.CommentDTO;
 import com.example.servertomcat.task.enums.Priority;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
