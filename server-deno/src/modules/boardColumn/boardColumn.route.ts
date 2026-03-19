@@ -10,7 +10,6 @@ import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { boardColumnService } from "../../shared/container.ts";
 import { 
     APIException, APIErrorCode, APIResponse, 
-    BoardDetailDto, BoardMemberDto, BoardSummaryDto,
     BoardColumnDto
 } from "../../shared/types/mod.ts";
 
@@ -44,14 +43,51 @@ router.get("/boards/:boardId/columns", async (ctx) => {
 router.post("/boards/:boardId/columns", async (ctx) => {
     const boardId = ctx.params.boardId!;
     const userPseudo = ctx.state.user?.pseudo;
-    
-    // Vérification de l'authentification de l'utilisateur
+
     if (!userPseudo) {
         throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
     }
-    
-    // Récupération des données de la requête
     const body = await ctx.request.body.json();
 
-    // Envoie des données à Tomcat pour créer une nouvelle colonne dans le tableau
-    const newColumn = await boardColumnService.createColumn(boardId, body);
+    const newColumn = await boardColumnService.createColumn(boardId, body, userPseudo);
+
+    const responseBody: APIResponse<BoardColumnDto> = {
+        success: true,
+        data: newColumn,
+    };
+
+    ctx.response.status = 201;
+    ctx.response.body = responseBody;
+});
+
+    router.put("/columns/:columnId", async (ctx) => {
+    const columnId = ctx.params.columnId!;
+    const userPseudo = ctx.state.user.pseudo;
+    const body = await ctx.request.body.json();
+
+    const updatedColumn = await boardColumnService.updateColumn(columnId, body, userPseudo);
+
+    ctx.response.status = 200;
+    ctx.response.body = { success: true, data: updatedColumn };
+    });
+
+    router.patch("/columns/:columnId/position", async (ctx) => {
+    const columnId = ctx.params.columnId!;
+    const userPseudo = ctx.state.user.pseudo;
+    const body = await ctx.request.body.json();
+
+    await boardColumnService.updateColumnPosition(columnId, body, userPseudo);
+
+    ctx.response.status = 200;
+    ctx.response.body = { success: true, data: null };
+    });
+
+    router.delete("/columns/:columnId", async (ctx) => {
+    const columnId = ctx.params.columnId!;
+    const userPseudo = ctx.state.user.pseudo;
+
+    await boardColumnService.deleteColumn(columnId, userPseudo);
+
+    ctx.response.status = 200;
+    ctx.response.body = { success: true, data: null };
+    });
