@@ -8,6 +8,7 @@ import { CreateBoard } from "./pages/CreateBoard.tsx";
 import { Profile } from "./pages/Profile.tsx";
 import { Admin } from "./pages/Admin.tsx";
 import { BoardDetail } from "./pages/BoardDetail.tsx";
+import { Invitations } from "./pages/Invitation.tsx";
 
 export interface User {
   pseudo: string;
@@ -106,6 +107,17 @@ function App() {
             )
           }
         />
+
+        <Route
+  path="/invitations"
+  element={
+    user ? (
+      <Invitations user={user} />
+    ) : (
+      <Navigate to="/login" />
+    )
+  }
+/>
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

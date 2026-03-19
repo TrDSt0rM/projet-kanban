@@ -171,3 +171,26 @@ router.delete("/me", async (ctx) => {
   ctx.response.status = 200;
   ctx.response.body = responseBody;
 });
+
+/**
+ * Route pour l'autocomplétion des pseudos
+ * @route GET /users/autocomplete
+ */
+router.get("/autocomplete", async (ctx) => {
+  const pseudo = ctx.request.url.searchParams.get("pseudo");
+  
+  if (!pseudo) {
+    ctx.response.body = { success: true, data: [] };
+    return;
+  }
+
+  const suggestions = await userService.getAutocomplete(pseudo);
+
+  const responseBody: APIResponse<UserDto[]> = {
+    success: true,
+    data: suggestions,
+  };
+
+  ctx.response.status = 200;
+  ctx.response.body = responseBody;
+});

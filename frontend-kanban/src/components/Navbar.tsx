@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   ShieldCheck,
@@ -6,6 +6,7 @@ import {
   LogOut,
   User as UserIcon,
   ChevronDown,
+  Bell,
 } from "lucide-react";
 import { User } from "@/App";
 import { Link, useNavigate } from "react-router";
@@ -17,19 +18,42 @@ interface NavbarProps {
 
 export function Navbar({ user, onLogout }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [invitCount, setInvitCount] = useState(0); // État pour le nombre d'invitations
   const navigate = useNavigate();
+
+  // Récupérer le nombre d'invitations au montage
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchInvitCount = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/invitations", {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setInvitCount(result.data.length);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur chargement notifications:", error);
+      }
+    };
+
+    fetchInvitCount();
+    // Optionnel: rafraîchir toutes le 30 secondes
+    const interval = setInterval(fetchInvitCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const navButtonStyle =
     "flex items-center gap-2 px-4 py-1.5 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200";
 
   const handleLogoutClick = () => {
     setIsMenuOpen(false);
-    // 1. Rediriger vers la racine
     navigate("/", { replace: true });
-    // 2. Nettoyer le state et le localStorage via la fonction de App.tsx
-    if (onLogout) {
-      onLogout();
-    }
+    if (onLogout) onLogout();
   };
 
   return (
@@ -59,68 +83,97 @@ export function Navbar({ user, onLogout }: NavbarProps) {
         </div>
       </div>
 
-      <div className="relative">
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="flex items-center gap-3 p-1 pr-3 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200"
-        >
-          <Avatar className="h-9 w-9 border-2 border-white shadow-sm ring-1 ring-blue-100">
-            <AvatarImage
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.pseudo}`}
-            />
-            <AvatarFallback className="bg-blue-100 text-blue-600 font-bold">
-              {user?.pseudo?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="hidden sm:flex flex-col items-start">
-            <span className="text-xs font-bold text-gray-800 leading-none">
-              {user?.pseudo}
-            </span>
-            <span className="text-[10px] uppercase text-blue-500 font-bold tracking-tight">
-              {user?.role}
-            </span>
-          </div>
-          <ChevronDown
-            className={`size-4 text-gray-400 transition-transform ${isMenuOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        {isMenuOpen && (
-          <>
-            <div
-              className="fixed inset-0"
-              onClick={() => setIsMenuOpen(false)}
-            ></div>
-            <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-xl py-2 animate-in fade-in zoom-in duration-150">
-              <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">
-                  Compte
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  navigate("/profile");
-                  setIsMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              >
-                <UserIcon className="size-4" />
-                Mon Profil
-              </button>
-
-              <div className="h-px bg-gray-100 my-1"></div>
-
-              <button
-                onClick={handleLogoutClick}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="size-4" />
-                Déconnexion
-              </button>
-            </div>
-          </>
+      <div className="flex items-center gap-4">
+        {/* Icône de Messagerie / Invitations */}
+        {user && (
+          <Link
+            to="/invitations"
+            className="relative p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+          >
+            <Bell className="size-6" />
+            {invitCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                {invitCount}
+              </span>
+            )}
+          </Link>
         )}
+
+        <div className="relative">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="flex items-center gap-3 p-1 pr-3 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200"
+          >
+            <Avatar className="h-9 w-9 border-2 border-white shadow-sm ring-1 ring-blue-100">
+              <AvatarImage
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.pseudo}`}
+              />
+              <AvatarFallback className="bg-blue-100 text-blue-600 font-bold">
+                {user?.pseudo?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="hidden sm:flex flex-col items-start">
+              <span className="text-xs font-bold text-gray-800 leading-none">
+                {user?.pseudo}
+              </span>
+              <span className="text-[10px] uppercase text-blue-500 font-bold tracking-tight">
+                {user?.role}
+              </span>
+            </div>
+            <ChevronDown
+              className={`size-4 text-gray-400 transition-transform ${isMenuOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {isMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0"
+                onClick={() => setIsMenuOpen(false)}
+              ></div>
+              <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-xl py-2 animate-in fade-in zoom-in duration-150">
+                <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">
+                    Compte
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    navigate("/profile");
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <UserIcon className="size-4" />
+                  Mon Profil
+                </button>
+
+                {/* Lien rapide vers invitations dans le menu mobile/déroulant */}
+                <button
+                  onClick={() => {
+                    navigate("/invitations");
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors sm:hidden"
+                >
+                  <Bell className="size-4" />
+                  Invitations ({invitCount})
+                </button>
+
+                <div className="h-px bg-gray-100 my-1"></div>
+
+                <button
+                  onClick={handleLogoutClick}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="size-4" />
+                  Déconnexion
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
