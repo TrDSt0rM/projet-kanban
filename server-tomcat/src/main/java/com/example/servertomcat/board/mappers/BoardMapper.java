@@ -3,10 +3,11 @@ package com.example.servertomcat.board.mappers;
 import com.example.servertomcat.board.dtos.BoardDetailDto;
 import com.example.servertomcat.board.dtos.BoardSummaryDto;
 import com.example.servertomcat.board.entities.Board;
+import com.example.servertomcat.boardColumn.BoardColumnMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper (componentModel = "spring", uses = BoardMemberMapper.class)
+@Mapper (componentModel = "spring", uses = {BoardMemberMapper.class, BoardColumnMapper.class})
 public interface BoardMapper {
 
     @Mapping(source = "board.idBoard", target = "idBoard")

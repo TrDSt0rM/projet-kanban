@@ -1,6 +1,6 @@
 package com.example.servertomcat.board.entities;
 
-import com.example.servertomcat.BoardColumn.BoardColumn;
+import com.example.servertomcat.boardColumn.BoardColumn;
 import com.example.servertomcat.board.enums.MemberRole;
 import com.example.servertomcat.user.entities.User;
 import jakarta.persistence.*;

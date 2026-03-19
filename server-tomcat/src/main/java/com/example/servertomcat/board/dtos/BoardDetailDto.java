@@ -1,6 +1,6 @@
 package com.example.servertomcat.board.dtos;
 
-import com.example.servertomcat.BoardColumn.dtos.BoardColumnDto;
+import com.example.servertomcat.boardColumn.dtos.BoardColumnDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
