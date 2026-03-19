@@ -32,4 +32,6 @@ public interface TaskRepository extends JpaRepository<Task, String> {
                            @Param("keyword") String keyword,
                            @Param("priority") Priority priority,
                            @Param("assignedTo") String assignedTo);
+
+    long countByAssignedUserPseudo(String pseudo);
 }

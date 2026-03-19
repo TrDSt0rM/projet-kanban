@@ -3,9 +3,7 @@ package com.example.servertomcat.task.controllers;
 import com.example.servertomcat.task.dtos.*;
 import com.example.servertomcat.task.enums.Priority;
 import com.example.servertomcat.task.services.TaskService;
-import com.example.servertomcat.task.services.impl.TaskServiceImpl;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,21 +21,21 @@ public class TaskController {
     }
 
     @GetMapping("/columns/{columnId}/tasks")
-    public ResponseEntity<List<TaskDto>> getTasks(
+    public ResponseEntity<List<TaskSummaryDto>> getTasks(
             @PathVariable String columnId,
             @RequestHeader("X-User-Pseudo") String pseudo) {
         return ResponseEntity.ok(taskService.getTasks(columnId, pseudo));
     }
 
     @GetMapping("/tasks/{taskId}")
-    public ResponseEntity<TaskDto> getTaskById(
+    public ResponseEntity<TaskSummaryDto> getTaskById(
             @PathVariable String taskId,
             @RequestHeader("X-User-Pseudo") String pseudo) {
         return ResponseEntity.ok(taskService.getTaskById(taskId, pseudo));
     }
 
     @PostMapping("/columns/{columnId}/tasks")
-    public ResponseEntity<TaskDto> createTask(
+    public ResponseEntity<TaskSummaryDto> createTask(
             @PathVariable String columnId,
             @Valid @RequestBody TaskCreateDto dto,
             @RequestHeader("X-User-Pseudo") String pseudo) {
@@ -46,7 +44,7 @@ public class TaskController {
     }
 
     @PutMapping("/tasks/{taskId}")
-    public ResponseEntity<TaskDto> updateTask(
+    public ResponseEntity<TaskSummaryDto> updateTask(
             @PathVariable String taskId,
             @Valid @RequestBody TaskUpdateDto dto,
             @RequestHeader("X-User-Pseudo") String pseudo) {
@@ -80,7 +78,7 @@ public class TaskController {
     }
 
     @PatchMapping("/tasks/{taskId}/assign")
-    public ResponseEntity<TaskDto> assignTask(
+    public ResponseEntity<TaskSummaryDto> assignTask(
             @PathVariable String taskId,
             @Valid @RequestBody TaskAssignDto dto,
             @RequestHeader("X-User-Pseudo") String pseudo) {
@@ -88,7 +86,7 @@ public class TaskController {
     }
 
     @GetMapping("/boards/{boardId}/tasks/search")
-    public ResponseEntity<List<TaskDto>> searchTasks(
+    public ResponseEntity<List<TaskSummaryDto>> searchTasks(
             @PathVariable String boardId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Priority priority,

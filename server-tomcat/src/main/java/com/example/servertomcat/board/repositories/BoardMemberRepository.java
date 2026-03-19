@@ -23,4 +23,6 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, BoardM
     // Vérifie si un user est owner d'un tableau
     boolean existsByIdIdBoardAndIdPseudoUserAndRole(
             String boardId, String pseudo, MemberRole role);
+
+    long countByIdPseudoUser(String pseudo);
 }

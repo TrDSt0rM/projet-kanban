@@ -4,10 +4,7 @@ import com.example.servertomcat.board.repositories.BoardMemberRepository;
 import com.example.servertomcat.boardColumn.BoardColumn;
 import com.example.servertomcat.boardColumn.BoardColumnRepository;
 import com.example.servertomcat.task.dtos.*;
-import com.example.servertomcat.dtos.CommentDTO;
-import com.example.servertomcat.entities.Comment;
 import com.example.servertomcat.task.entities.Task;
-import com.example.servertomcat.repositories.CommentRepository;
 import com.example.servertomcat.task.enums.Priority;
 import com.example.servertomcat.task.mappers.TaskMapper;
 import com.example.servertomcat.task.repositories.TaskRepository;
@@ -15,7 +12,6 @@ import com.example.servertomcat.task.services.TaskService;
 import com.example.servertomcat.user.entities.User;
 import com.example.servertomcat.user.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +19,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -38,7 +33,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TaskDto> getTasks(String columnId, String pseudo) {
+    public List<TaskSummaryDto> getTasks(String columnId, String pseudo) {
         BoardColumn column = findColumnById(columnId);
         checkIsMember(column.getBoard().getIdBoard(), pseudo);
         return taskRepository.findByColumnIdColumnOrderByPosition(columnId)
@@ -49,14 +44,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public TaskDto getTaskById(String taskId, String pseudo) {
+    public TaskSummaryDto getTaskById(String taskId, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
         return taskMapper.toDto(task);
     }
 
     @Override
-    public TaskDto createTask(String columnId, TaskCreateDto dto, String pseudo) {
+    public TaskSummaryDto createTask(String columnId, TaskCreateDto dto, String pseudo) {
         BoardColumn column = findColumnById(columnId);
         checkIsMember(column.getBoard().getIdBoard(), pseudo);
 
@@ -82,7 +77,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDto updateTask(String taskId, TaskUpdateDto dto, String pseudo) {
+    public TaskSummaryDto updateTask(String taskId, TaskUpdateDto dto, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
 
@@ -152,7 +147,7 @@ public class TaskServiceImpl implements TaskService {
 
 
     @Override
-    public TaskDto assignTask(String taskId, TaskAssignDto dto, String pseudo) {
+    public TaskSummaryDto assignTask(String taskId, TaskAssignDto dto, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
 
@@ -171,8 +166,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TaskDto> searchTasks(String pseudo, String keyword,
-                                     Priority priority, String assignedTo) {
+    public List<TaskSummaryDto> searchTasks(String pseudo, String keyword,
+                                            Priority priority, String assignedTo) {
         return taskRepository.searchTasks(pseudo, keyword, priority, assignedTo)
                 .stream()
                 .map(taskMapper::toDto)
