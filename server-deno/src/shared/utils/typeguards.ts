@@ -14,7 +14,6 @@ import {
   UserDto,
   UserEntity,
   BoardColumnDto,
-  TaskDto,
   BoardUpdateRequest,
   UserUpdateRequest,
   UserUpdatePasswordRequest,
@@ -23,6 +22,8 @@ import {
   BoardColumnUpdateRequest,
   InvitationCreateRequest,
   InvitationDto,
+  TaskAssignRequest, TaskCreateRequest, TaskDto, 
+  TaskUpdateRequest, TaskMoveRequest, TaskPositionRequest,
 } from "../types/mod.ts";
 import { LoginDto, RegisterDto } from "../../modules/auth/auth.types.ts";
 
@@ -215,6 +216,24 @@ export function isInvitationDto(obj: unknown): obj is InvitationDto {
  * Type guards pour les DTOs de tâche
  ================================================= */
 
+export function isTaskAssignRequest(obj: unknown): obj is TaskAssignRequest {
+    return !!obj && 
+    typeof obj === "object" &&
+    "pseudo" in obj &&
+    (typeof obj.pseudo === "string" || obj.pseudo === null);
+}
+
+export function isTaskCreateRequest(obj: unknown): obj is TaskCreateRequest {
+    return (
+        !!obj &&
+        typeof obj === "object" &&
+        "taskName" in obj &&
+        typeof obj.taskName === "string" &&
+        "description" in obj &&
+        (obj.description ? typeof obj.description === "string" : true)
+    );
+}
+
 export function isTaskDto(obj: unknown): obj is TaskDto {
   return (
     !!obj &&
@@ -234,6 +253,27 @@ export function isTaskDto(obj: unknown): obj is TaskDto {
       : true) &&
     ("assignedTo" in obj ? typeof obj.assignedTo === "string" : true)
   );
+}
+
+export function isTaskMoveRequest(obj: unknown): obj is TaskMoveRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "targetColumnId" in obj && 
+    typeof obj.targetColumnId === "string";
+}
+
+export function isTaskPositionRequest(obj: unknown): obj is TaskPositionRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "position" in obj && 
+    typeof obj.position === "number";
+}
+
+export function isTaskUpdateRequest(obj: unknown): obj is TaskUpdateRequest {
+    return !!obj && 
+    typeof obj === "object" && 
+    "taskName" in obj && 
+    typeof obj.taskName === "string";
 }
 
 /* ==================================================

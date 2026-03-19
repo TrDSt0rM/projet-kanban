@@ -83,15 +83,46 @@ export interface BoardColumnUpdateRequest {
 /* ==================================================
  * Interface Task
  ================================================= */
+export interface TaskAssignRequest {
+    pseudo: string | null;
+}
+
+export interface TaskCreateRequest {
+    taskName: string;
+    description?: string;
+    priority?: string;
+    limitDate?: string; // Format ISO LocalDate
+    assignedUserPseudo?: string;
+}
+
 export interface TaskDto {
-    id: string;
-    title: string;
+    idTask: string;
+    taskName: string;
     description: string;
     position: number;
     priority: string;
-    expectedCompletionDate?: string;
-    assignedTo?: string;
+    limitDate?: string;
+    assignedUserPseudo?: string;
 }
+
+export interface TaskMoveRequest {
+    targetColumnId: string;
+}
+
+export interface TaskPositionRequest {
+    position: number;
+}
+
+export interface TaskUpdateRequest {
+    taskName: string;
+    description?: string;
+    priority?: string;
+    limitDate?: string;
+}
+
+/** =================================================
+ * Interface Comment
+ ================================================= */
 
 export interface CommentDtos {
     id: string;

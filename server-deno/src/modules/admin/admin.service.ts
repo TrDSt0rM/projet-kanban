@@ -9,12 +9,12 @@ export class AdminService {
     constructor() {}
 
     /**
-     * Récupère la liste de tous les utilisateurs (Admin uniquement)
+     * Récupère la liste de tous les utilisateurs du système 
+     * @returns 
      */
-    async getAllUsers(adminPseudo: string): Promise<UserDto[]> {
+    async getAllUsers(): Promise<UserDto[]> {
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/admin/users`, {
             method: "GET",
-            headers: { "X-User-Pseudo": adminPseudo }
         });
 
         if (!response.ok) {
@@ -26,12 +26,11 @@ export class AdminService {
     /**
      * Met à jour un utilisateur (rôle ou activation)
      */
-    async updateUser(adminPseudo: string, targetPseudo: string, data: UserUpdateRequest): Promise<UserDto> {
+    async updateUser(targetPseudo: string, data: UserUpdateRequest): Promise<UserDto> {
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/admin/users/${targetPseudo}`, {
             method: "PATCH",
             headers: { 
                 "Content-Type": "application/json",
-                "X-User-Pseudo": adminPseudo 
             },
             body: JSON.stringify(data),
         });
@@ -45,10 +44,9 @@ export class AdminService {
     /**
      * Supprime un utilisateur définitivement
      */
-    async deleteUser(adminPseudo: string, targetPseudo: string): Promise<void> {
+    async deleteUser(targetPseudo: string): Promise<void> {
         const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/admin/users/${targetPseudo}`, {
             method: "DELETE",
-            headers: { "X-User-Pseudo": adminPseudo }
         });
 
         if (!response.ok) {

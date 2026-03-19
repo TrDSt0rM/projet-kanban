@@ -13,8 +13,8 @@ export const boardService = new BoardService();
 export const boardColumnService = new BoardColumnService();
 export const taskService = new TaskService();
 export const adminService = new AdminService();
-//export const commentService = new CommentService();
 export const invitationService = new InvitationService();
+//export const commentService = new CommentService();
 export const userService = new UserService();
 
 export const URL_SERVER_TOMCAT = "http://localhost:8080";
