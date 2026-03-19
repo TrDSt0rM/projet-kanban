@@ -28,7 +28,7 @@ export class InvitationService {
                 "Content-Type": "application/json",
                 "X-User-Pseudo": ownerPseudo,
             },
-            body: JSON.stringify({  }),
+            body: JSON.stringify(invitationRequest),
         });
 
         if (!response.ok) {
@@ -97,6 +97,7 @@ export class InvitationService {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-User-Pseudo": userPseudo,
             },
             body: JSON.stringify({ pseudo: userPseudo }),
         });
@@ -121,12 +122,12 @@ export class InvitationService {
     }
 
     async declineInvitation(boardId: string, userPseudo: string): Promise<void> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/invitations/${boardId}/decline`, {
-            method: "POST",
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/invitations/${boardId}`, {
+            method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
+                "X-User-Pseudo": userPseudo,
             },
-            body: JSON.stringify({ pseudo: userPseudo }),
         });
 
         if (!response.ok) {
