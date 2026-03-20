@@ -15,4 +15,5 @@ public interface TaskService {
     void updatePosition(String taskId, TaskPositionDto dto, String pseudo);
     TaskSummaryDto assignTask(String taskId, TaskAssignDto dto, String pseudo);
     List<TaskSummaryDto> searchTasks(String pseudo, String keyword, Priority priority, String assignedTo);
+    void deleteComment(String taskId, String commentId, String pseudo);
 }

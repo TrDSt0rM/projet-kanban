@@ -14,7 +14,8 @@ import { Loader2, UserPlus, X, Search, CheckCircle2, Pencil, Trash2, Check, Rota
 import { 
   BoardDetailDto, 
   BoardColumnDto, 
-  UserDto 
+  UserDto, 
+  BoardMemberDto
 } from "@/types/interfaces-dtos";
 
 export function BoardDetail({
@@ -50,6 +51,7 @@ export function BoardDetail({
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<"LOW" | "MEDIUM" | "HIGH">("LOW");
   const [newTaskLimitDate, setNewTaskLimitDate] = useState("");
+  const [members, setMembers] = useState<BoardMemberDto[]>([]);
 
   // --- AUTOCOMPLETION ---
   useEffect(() => {
@@ -86,6 +88,46 @@ export function BoardDetail({
     }, 300);
     return () => clearTimeout(timer);
   }, [searchPseudo, user.token, user.pseudo]);
+
+  const handleRemoveMember = async (memberPseudo: string) => {
+  if (!window.confirm(`Retirer ${memberPseudo} du tableau ?`)) return;
+
+  try {
+    const response = await fetch(`http://localhost:8000/boards/${boardId}/members/${memberPseudo}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${user.token}` },
+    });
+
+    if (response.ok) {
+      setMembers(prev => prev.filter(m => m.pseudo !== memberPseudo));
+      fetchBoardData();
+    } else {
+      const error = await response.json();
+      alert(error.message || "Erreur lors de la suppression du membre.");
+    }
+  } catch (err) {
+    console.error("Erreur réseau:", err);
+  }
+};
+
+  const handleAssignTask = async (taskId: string, assigneePseudo: string) => {
+  try {
+    const response = await fetch(`http://localhost:8000/tasks/${taskId}/assign`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${user.token}`
+      },
+      body: JSON.stringify({ pseudo: assigneePseudo || null })
+    });
+    
+    if (response.ok) {
+      fetchBoardData();
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'assignation:", error);
+  }
+};
 
   // --- CHARGEMENT DES DONNÉES DU TABLEAU ---
   useEffect(() => {
@@ -146,6 +188,61 @@ export function BoardDetail({
       alert("Erreur réseau lors de la suppression.");
     }
   };
+// --- FONCTION DE CHARGEMENT (Accessible partout) ---
+const fetchBoardData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/boards/${boardId}`,
+      { headers: { Authorization: `Bearer ${user.token}` } },
+    );
+    if (response.ok) {
+      const result = await response.json();
+      const data: BoardDetailDto = result.data;
+      
+      if (!data) return;
+
+      setOwnerPseudo(data.ownerPseudo);
+      setBoardName(data.boardName || "Tableau sans nom");
+      setTempName(data.boardName || "Tableau sans nom");
+
+      if (data.columns) {
+        const formattedColumns = [...data.columns]
+          .sort((a, b) => a.position - b.position)
+          .map((col) => ({
+            ...col,
+            tasks: col.tasks ? [...col.tasks].sort((a, b) => a.position - b.position) : [],
+          }));
+        setColumns(formattedColumns);
+      }
+    }
+  } catch (err) {
+    console.error("Erreur de chargement:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// --- FONCTION DE CHARGEMENT DES MEMBRES ---
+const fetchMembers = async () => {
+  try {
+    const res = await fetch(`http://localhost:8000/boards/${boardId}/members`, {
+      headers: { Authorization: `Bearer ${user.token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      setMembers(data.data);
+    }
+  } catch (err) {
+    console.error("Erreur chargement membres", err);
+  }
+};
+
+useEffect(() => {
+  if (boardId) {
+    fetchBoardData();
+    fetchMembers();
+  }
+}, [boardId, user.token]);
 
   // --- MODIFICATION DU NOM ---
   const handleUpdateName = async () => {
@@ -360,11 +457,38 @@ const handleDeleteColumn = async (columnId: string) => {
 };
 
   // --- DRAG AND DROP ---
-  const onDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+const onDragEnd = async (result: DropResult) => {
+  const { destination, source, draggableId, type } = result;
 
+  if (!destination) return;
+  if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+  // --- LOGIQUE POUR LES COLONNES ---
+  if (type === "column") {
+    const newColumns = Array.from(columns);
+    const [removed] = newColumns.splice(source.index, 1);
+    newColumns.splice(destination.index, 0, removed);
+
+    // Mise à jour locale immédiate pour la fluidité
+    setColumns(newColumns);
+
+    try {
+      // Appel API pour sauvegarder la nouvelle position de la colonne
+      await fetch(`http://localhost:8000/columns/${draggableId}/position`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          position: destination.index,
+        }),
+      });
+    } catch (err) {
+      alert("Erreur lors du déplacement de la colonne");
+    }
+    return;
+  }
     const newColumns = Array.from(columns);
     const startCol = newColumns.find((c) => c.idColumn === source.droppableId);
     const endCol = newColumns.find((c) => c.idColumn === destination.droppableId);
@@ -375,15 +499,14 @@ const handleDeleteColumn = async (columnId: string) => {
       setColumns(newColumns);
 
       try {
-        await fetch(`http://localhost:8000/tasks/${draggableId}/position`, {
-          method: "PUT",
+        await fetch(`http://localhost:8000/tasks/${draggableId}/move`, {
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user.token}`,
           },
           body: JSON.stringify({
-            position: destination.index,
-            idColumn: destination.droppableId
+            targetColumnId: destination.droppableId,
           }),
         });
       } catch (err) {
@@ -438,6 +561,33 @@ const handleDeleteColumn = async (columnId: string) => {
             </>
           )}
         </div>
+ {/* LISTE DES MEMBRES DANS LE HEADER */}
+<div className="flex -space-x-2 overflow-hidden mr-4">
+  {members.map((member) => (
+    <div
+      key={member.pseudo}
+      className="relative group/member" // Group pour gérer le survol
+    >
+      <div
+        title={`${member.pseudo} (${member.memberRole})`}
+        className="inline-block size-8 rounded-full ring-2 ring-white bg-blue-500 flex items-center justify-center text-white text-xs font-bold cursor-help"
+      >
+        {member.pseudo.substring(0, 2).toUpperCase()}
+      </div>
+
+      {/* Bouton de suppression : visible uniquement si on est owner et que ce n'est pas nous-même */}
+      {isOwner && member.pseudo !== user.pseudo && (
+        <button
+          onClick={() => handleRemoveMember(member.pseudo)}
+          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover/member:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+          title="Retirer ce membre"
+        >
+          <X className="size-3" />
+        </button>
+      )}
+    </div>
+  ))}
+</div>
 
         <div className="flex items-center gap-3">
           {isOwner && (
@@ -463,224 +613,169 @@ const handleDeleteColumn = async (columnId: string) => {
           )}
         </div>
       </div>
+      
 
 {/* BOARD CONTENT */}
       <div className="p-8">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-6 overflow-x-auto pb-4 items-start">
-            
-            {/* 1. Affichage des colonnes existantes via le .map */}
-            {columns.map((column) => (
-              <div
-                key={column.idColumn}
-                className="bg-gray-100 p-4 rounded-xl w-80 shrink-0 border border-gray-200 shadow-sm group/col flex flex-col max-h-[80vh]"
+          <Droppable droppableId="all-columns" direction="horizontal" type="column">
+            {(provided) => (
+              <div 
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="flex gap-6 overflow-x-auto pb-4 items-start"
               >
-                {/* HEADER DE LA COLONNE AVEC ACTIONS */}
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-bold text-gray-700 uppercase text-xs tracking-widest truncate mr-2">
-                    {column.columnName}
-                  </h2>
-                  
-                  <div className="flex items-center gap-1 opacity-0 group-hover/col:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleUpdateColumnName(column.idColumn, column.columnName)}
-                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      title="Modifier le nom"
-                    >
-                      <Pencil className="size-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteColumn(column.idColumn)}
-                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title="Supprimer la colonne"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                    <span className="ml-1 text-[10px] font-bold bg-white px-2 py-0.5 rounded-full text-blue-500 border border-blue-100 shadow-sm">
-                      {column.tasks.length}
-                    </span>
-                  </div>
-                </div>
-
-                {/* ZONE DE DROP POUR LES TÂCHES */}
-                <Droppable droppableId={column.idColumn}>
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="flex-1 overflow-y-auto min-h-[50px] transition-colors pb-4"
-                    >
-                      {column.tasks.map((task, index) => (
-                        <Draggable
-                          key={task.idTask}
-                          draggableId={task.idTask}
-                          index={index}
+                {columns.map((column, index) => (
+                  <Draggable key={column.idColumn} draggableId={column.idColumn} index={index}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className="bg-gray-100 p-4 rounded-xl w-80 shrink-0 border border-gray-200 shadow-sm group/col flex flex-col max-h-[80vh]"
+                      >
+                        {/* HEADER DE LA COLONNE */}
+                        <div 
+                          {...provided.dragHandleProps}
+                          className="flex justify-between items-center mb-4 cursor-grab active:cursor-grabbing"
                         >
+                          <h2 className="font-bold text-gray-700 uppercase text-xs tracking-widest truncate mr-2">
+                            {column.columnName}
+                          </h2>
+                          <div className="flex items-center gap-1 opacity-0 group-hover/col:opacity-100 transition-opacity">
+                            <button onClick={() => handleUpdateColumnName(column.idColumn, column.columnName)} className="p-1 text-gray-400 hover:text-blue-600 rounded">
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteColumn(column.idColumn)} className="p-1 text-gray-400 hover:text-red-600 rounded">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                            <span className="ml-1 text-[10px] font-bold bg-white px-2 py-0.5 rounded-full text-blue-500 border border-blue-100">
+                              {column.tasks.length}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ZONE DE DROP POUR LES TÂCHES */}
+                        <Droppable droppableId={column.idColumn} type="task">
                           {(provided) => (
                             <div
+                              {...provided.droppableProps}
                               ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              onClick={() => navigate(`/board/${boardId}/tasks/${task.idTask}`)}
-                              className="bg-white p-4 mb-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-md transition-all group relative cursor-pointer active:scale-[0.98]"
+                              className="flex-1 overflow-y-auto min-h-[50px] transition-colors pb-4"
                             >
-                              {/* Header de la tâche */}
-                              <div className="flex justify-between items-start mb-2">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getPriorityStyles(task.priority)}`}>
-                                {task.priority || "LOW"}
-                              </span>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation(); // CRUCIAL : Empêche l'ouverture de la page de détails
-                                    handleDeleteTask(task.idTask);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all rounded-md hover:bg-red-50"
-                                  title="Supprimer la tâche"
-                                >
-                                  <Trash2 className="size-4" />
-                                </button>
-                              </div>
+                              {column.tasks.map((task, taskIndex) => (
+                                <Draggable key={task.idTask} draggableId={task.idTask} index={taskIndex}>
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      onClick={() => navigate(`/board/${boardId}/tasks/${task.idTask}`)}
+                                      className="bg-white p-4 mb-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-md transition-all group relative cursor-pointer active:scale-[0.98]"
+                                    >
+                                      <div className="flex justify-between items-start mb-2">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getPriorityStyles(task.priority)}`}>
+                                          {task.priority || "LOW"}
+                                        </span>
+                                        <button 
+                                          onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.idTask); }}
+                                          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 rounded-md"
+                                        >
+                                          <Trash2 className="size-4" />
+                                        </button>
+                                      </div>
+                                      
+                                      <div className="flex flex-col gap-3">
+                                        <p className="text-gray-800 font-semibold text-sm leading-tight group-hover:text-blue-600 transition-colors">
+                                          {task.taskName}
+                                        </p>
 
-                              {/* Contenu */}
-                              <p className="text-gray-800 font-semibold text-sm leading-tight group-hover:text-blue-600 transition-colors">
-                                {task.taskName}
-                              </p>
-
-                              {/* Footer : Date limite */}
-                              {task.limitDate && (
-                                <div className="mt-3 pt-2 border-t border-gray-50 flex items-center text-[10px] text-gray-400">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                  {new Date(task.limitDate).toLocaleDateString()}
-                                </div>
-                              )}
+                                        {/* SÉLECTEUR D'ASSIGNATION */}
+                                        <div className="mt-1 border-t pt-2">
+                                          <label className="text-[9px] uppercase font-bold text-gray-400 block mb-1">Assigner à</label>
+                                          <select
+                                            value={task.assignedUserPseudo || ""}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={(e) => handleAssignTask(task.idTask, e.target.value)}
+                                            className="w-full text-[11px] bg-gray-50 border border-gray-200 rounded px-2 py-1 text-gray-600 outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer"
+                                          >
+                                            <option value="">Non assigné</option>
+                                            {ownerPseudo && <option value={ownerPseudo}>{ownerPseudo} (Admin)</option>}
+                                            {members.map((m) => (
+                                              <option key={m.pseudo} value={m.pseudo}>{m.pseudo}</option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
                             </div>
                           )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
+                        </Droppable>
 
-                {/* BAS DE LA COLONNE : AJOUT DE TÂCHE */}
-                <div className="mt-2">
-                  {addingTaskToColumn === column.idColumn ? (
-                    <div className="bg-white p-3 rounded-xl border-2 border-blue-400 shadow-md animate-in fade-in slide-in-from-top-2 duration-200">
-                      <input
-                        className="w-full text-sm font-bold p-1 outline-none border-b border-gray-100 mb-2"
-                        placeholder="Titre de la tâche..."
-                        autoFocus
-                        value={newTaskName}
-                        onChange={(e) => setNewTaskName(e.target.value)}
-                      />
-                      <textarea
-                        className="w-full text-xs p-1 outline-none resize-none bg-gray-50 rounded"
-                        placeholder="Description (optionnel)..."
-                        rows={2}
-                        value={newTaskDescription}
-                        onChange={(e) => setNewTaskDescription(e.target.value)}
-                      />
-                      
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {/* Sélecteur de Priorité */}
-                        <select 
-                          value={newTaskPriority}
-                          onChange={(e) => setNewTaskPriority(e.target.value as any)}
-                          className="text-[10px] font-bold border rounded px-1 py-1 bg-white outline-none"
-                        >
-                          <option value="LOW">Bas</option>
-                          <option value="MEDIUM">Moyen</option>
-                          <option value="HIGH">Urgent</option>
-                        </select>
-
-                        {/* Input Date */}
-                        <input 
-                          type="date"
-                          value={newTaskLimitDate}
-                          onChange={(e) => setNewTaskLimitDate(e.target.value)}
-                          className="text-[10px] border rounded px-1 py-1 bg-white outline-none"
+                        {/* BAS DE LA COLONNE */}
+                        <div className="mt-2">
+                          {addingTaskToColumn === column.idColumn ? (
+                            <div className="bg-white p-3 rounded-xl border-2 border-blue-400 shadow-md">
+                              <input
+                                className="w-full text-sm font-bold p-1 outline-none border-b mb-2"
+                                placeholder="Titre..."
+                                autoFocus
+                                value={newTaskName}
+                                onChange={(e) => setNewTaskName(e.target.value)}
+                              />
+                              <div className="flex items-center justify-between mt-4">
+                                <button onClick={() => handleAddTask(column.idColumn)} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">Créer</button>
+                                <button onClick={() => setAddingTaskToColumn(null)} className="p-1.5 text-gray-400"><X className="size-4" /></button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setAddingTaskToColumn(column.idColumn)}
+                              className="w-full flex items-center gap-2 p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-sm font-medium transition-all"
+                            >
+                              <Plus className="size-4" /> Ajouter une tâche
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+                {/* SECTION AJOUT DE COLONNE */}
+                <div className="w-80 shrink-0">
+                  {isAddingColumn ? (
+                    <div className="bg-gray-100 p-3 rounded-xl border border-blue-200">
+                      <form onSubmit={handleAddColumn}>
+                        <input
+                          type="text"
+                          value={newColumnName}
+                          onChange={(e) => setNewColumnName(e.target.value)}
+                          placeholder="Nom..."
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg mb-2"
+                          autoFocus
                         />
-                      </div>
-
-                      <div className="flex items-center justify-between mt-4">
-                        <button
-                          onClick={() => handleAddTask(column.idColumn)}
-                          className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-all shadow-sm active:scale-95"
-                        >
-                          Créer la tâche
-                        </button>
-                        <button
-                          onClick={() => {
-                            setAddingTaskToColumn(null);
-                            setNewTaskName("");
-                            setNewTaskDescription("");
-                          }}
-                          className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <X className="size-4" />
-                        </button>
-                      </div>
+                        <div className="flex items-center gap-2">
+                          <button type="submit" className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold">Ajouter</button>
+                          <button type="button" onClick={() => setIsAddingColumn(false)}><X className="size-5" /></button>
+                        </div>
+                      </form>
                     </div>
                   ) : (
                     <button
-                      onClick={() => setAddingTaskToColumn(column.idColumn)}
-                      className="w-full flex items-center gap-2 p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-sm font-medium transition-all group/btn"
+                      onClick={() => setIsAddingColumn(true)}
+                      className="w-full bg-gray-200/50 hover:bg-gray-200 border-2 border-dashed border-gray-300 rounded-xl p-4 flex items-center justify-center gap-2 text-gray-500 font-bold h-[58px]"
                     >
-                      <Plus className="size-4 transition-transform group-hover/btn:rotate-90" />
-                      Ajouter une tâche
+                      <Plus className="size-5" /> Ajouter une colonne
                     </button>
                   )}
                 </div>
               </div>
-            ))}
-
-            {/* 2. SECTION AJOUT DE COLONNE */}
-            <div className="w-80 shrink-0">
-              {isAddingColumn ? (
-                <div className="bg-gray-100 p-3 rounded-xl border border-blue-200 shadow-sm animate-in fade-in zoom-in duration-200">
-                  <form onSubmit={handleAddColumn}>
-                    <input
-                      type="text"
-                      value={newColumnName}
-                      onChange={(e) => setNewColumnName(e.target.value)}
-                      placeholder="Nom de la colonne..."
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2 font-medium"
-                      autoFocus
-                    />
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
-                      >
-                        Ajouter
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingColumn(false);
-                          setNewColumnName("");
-                        }}
-                        className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors"
-                      >
-                        <X className="size-5" />
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsAddingColumn(true)}
-                  className="w-full bg-gray-200/50 hover:bg-gray-200 border-2 border-dashed border-gray-300 rounded-xl p-4 flex items-center justify-center gap-2 text-gray-500 font-bold transition-all hover:text-gray-700 group h-[58px]"
-                >
-                  <Plus className="size-5 transition-transform group-hover:rotate-90" />
-                  Ajouter une colonne
-                </button>
-              )}
-            </div>
-
-          </div>
+            )}
+          </Droppable>
         </DragDropContext>
       </div>
 

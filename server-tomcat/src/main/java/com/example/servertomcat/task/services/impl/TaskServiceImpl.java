@@ -1,6 +1,8 @@
 package com.example.servertomcat.task.services.impl;
 
+import com.example.servertomcat.board.entities.Board;
 import com.example.servertomcat.board.repositories.BoardMemberRepository;
+import com.example.servertomcat.board.services.BoardService;
 import com.example.servertomcat.boardColumn.BoardColumn;
 import com.example.servertomcat.boardColumn.BoardColumnRepository;
 import com.example.servertomcat.comment.documents.AttachmentDocument;
@@ -27,8 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static java.util.stream.Collectors.toList;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -40,6 +40,7 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final TaskMapper taskMapper;
     private final TaskDocumentRepository taskDocumentRepository;
+    private final BoardService boardService;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,7 +60,6 @@ public class TaskServiceImpl implements TaskService {
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
         TaskDetailDto dto = taskMapper.toDetailDto(task);
 
-        // Récupère les commentaires depuis MongoDB
         Optional<TaskDocument> docOpt = taskDocumentRepository.findByTaskId(taskId);
         if (docOpt.isPresent()) {
             TaskDocument doc = docOpt.get();
@@ -70,7 +70,6 @@ public class TaskServiceImpl implements TaskService {
                     .map(this::toAttachmentDto)
                     .toList());
         }
-
         return dto;
     }
 
@@ -78,51 +77,31 @@ public class TaskServiceImpl implements TaskService {
     public TaskSummaryDto createTask(String columnId, TaskCreateDto dto, String pseudo) {
         BoardColumn column = findColumnById(columnId);
         checkIsMember(column.getBoard().getIdBoard(), pseudo);
-
         int nextPosition = taskRepository.countByColumnIdColumn(columnId);
-
         Task task = new Task();
         task.setIdTask(UUID.randomUUID().toString());
         task.setTaskName(dto.getTaskName());
-
-        // Nettoyage de la description (évite les "" qui traînent)
-        String desc = (dto.getDescription() != null && !dto.getDescription().isBlank())
-                ? dto.getDescription() : null;
-        task.setDescription(desc);
-
+        task.setDescription((dto.getDescription() != null && !dto.getDescription().isBlank()) ? dto.getDescription() : null);
         task.setPosition(nextPosition);
         task.setPriority(dto.getPriority());
-
-        // Sécurité : LocalDate peut planter si le JSON est mal formé ou vide
         task.setLimitDate(dto.getLimitDate());
-
         task.setColumn(column);
-
-        // Gestion de l'utilisateur assigné
         if (dto.getAssignedUserPseudo() != null && !dto.getAssignedUserPseudo().isBlank()) {
             User user = userRepository.findById(dto.getAssignedUserPseudo())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Utilisateur introuvable"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
             task.setAssignedUser(user);
-        } else {
-            task.setAssignedUser(null);
         }
-
-        Task savedTask = taskRepository.save(task);
-
-        return taskMapper.toDto(savedTask);
+        return taskMapper.toDto(taskRepository.save(task));
     }
 
     @Override
     public TaskSummaryDto updateTask(String taskId, TaskUpdateDto dto, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
-
         task.setTaskName(dto.getTaskName());
         task.setDescription(dto.getDescription());
         task.setPriority(dto.getPriority());
         task.setLimitDate(dto.getLimitDate());
-
         return taskMapper.toDto(taskRepository.save(task));
     }
 
@@ -132,36 +111,22 @@ public class TaskServiceImpl implements TaskService {
         String columnId = task.getColumn().getIdColumn();
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
         taskRepository.deleteById(taskId);
-
-        // Réindexe les positions
-        List<Task> remaining = taskRepository
-                .findByColumnIdColumnOrderByPosition(columnId);
-        for (int i = 0; i < remaining.size(); i++) {
-            remaining.get(i).setPosition(i);
-        }
+        List<Task> remaining = taskRepository.findByColumnIdColumnOrderByPosition(columnId);
+        for (int i = 0; i < remaining.size(); i++) remaining.get(i).setPosition(i);
         taskRepository.saveAll(remaining);
     }
 
-    // Change la tâche de colonne
     @Override
     public void moveTask(String taskId, TaskMoveDto dto, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
-
         BoardColumn targetColumn = findColumnById(dto.getTargetColumnId());
-
-        // Réindexe l'ancienne colonne
         String oldColumnId = task.getColumn().getIdColumn();
         task.setColumn(targetColumn);
-        int newPosition = taskRepository.countByColumnIdColumn(dto.getTargetColumnId());
-        task.setPosition(newPosition);
+        task.setPosition(taskRepository.countByColumnIdColumn(dto.getTargetColumnId()));
         taskRepository.save(task);
-
-        List<Task> oldColumnTasks = taskRepository
-                .findByColumnIdColumnOrderByPosition(oldColumnId);
-        for (int i = 0; i < oldColumnTasks.size(); i++) {
-            oldColumnTasks.get(i).setPosition(i);
-        }
+        List<Task> oldColumnTasks = taskRepository.findByColumnIdColumnOrderByPosition(oldColumnId);
+        for (int i = 0; i < oldColumnTasks.size(); i++) oldColumnTasks.get(i).setPosition(i);
         taskRepository.saveAll(oldColumnTasks);
     }
 
@@ -170,65 +135,93 @@ public class TaskServiceImpl implements TaskService {
         Task task = findTaskById(taskId);
         String columnId = task.getColumn().getIdColumn();
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
-
-        List<Task> tasks = taskRepository
-                .findByColumnIdColumnOrderByPosition(columnId);
+        List<Task> tasks = taskRepository.findByColumnIdColumnOrderByPosition(columnId);
         tasks.remove(task);
         tasks.add(dto.getPosition(), task);
-
-        for (int i = 0; i < tasks.size(); i++) {
-            tasks.get(i).setPosition(i);
-        }
+        for (int i = 0; i < tasks.size(); i++) tasks.get(i).setPosition(i);
         taskRepository.saveAll(tasks);
     }
-
 
     @Override
     public TaskSummaryDto assignTask(String taskId, TaskAssignDto dto, String pseudo) {
         Task task = findTaskById(taskId);
         checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
-
         if (dto.getPseudo() == null) {
             task.setAssignedUser(null);
         } else {
             User user = userRepository.findById(dto.getPseudo())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Utilisateur introuvable"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
             task.setAssignedUser(user);
         }
-
         return taskMapper.toDto(taskRepository.save(task));
     }
 
-
     @Override
     @Transactional(readOnly = true)
-    public List<TaskSummaryDto> searchTasks(String pseudo, String keyword,
-                                            Priority priority, String assignedTo) {
+    public List<TaskSummaryDto> searchTasks(String pseudo, String keyword, Priority priority, String assignedTo) {
         return taskRepository.searchTasks(pseudo, keyword, priority, assignedTo)
-                .stream()
-                .map(taskMapper::toDto)
-                .toList();
+                .stream().map(taskMapper::toDto).toList();
+    }
+
+    /**
+     * Suppression d'un commentaire.
+     * Corrigé : On extrait le pseudo de l'objet User du Board.
+     */
+    @Override
+    public void deleteComment(String taskId, String commentId, String pseudo) {
+        Task task = findTaskById(taskId);
+        checkIsMember(task.getColumn().getBoard().getIdBoard(), pseudo);
+
+        TaskDocument doc = findOrCreateDocument(taskId);
+        CommentDocument comment = findComment(doc, commentId);
+
+        // ICI : On récupère l'objet User, puis son pseudo (ou son ID selon ta config)
+        User ownerUser = task.getColumn().getBoard().getOwner();
+        String boardOwnerPseudo = (ownerUser != null) ? ownerUser.getPseudo() : null;
+
+        boolean isAuthor = comment.getUserId().equals(pseudo);
+        boolean isBoardOwner = boardOwnerPseudo != null && boardOwnerPseudo.equals(pseudo);
+
+        if (!isAuthor && !isBoardOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seul l'auteur ou le propriétaire du tableau peut supprimer ce commentaire");
+        }
+
+        doc.getComments().remove(comment);
+        taskDocumentRepository.save(doc);
     }
 
     // ---- Méthodes privées ----
 
+    private TaskDocument findOrCreateDocument(String taskId) {
+        return taskDocumentRepository.findByTaskId(taskId)
+                .orElseGet(() -> {
+                    TaskDocument newDoc = new TaskDocument();
+                    newDoc.setTaskId(taskId);
+                    return newDoc;
+                });
+    }
+
+    private CommentDocument findComment(TaskDocument doc, String commentId) {
+        return doc.getComments().stream()
+                .filter(c -> c.getCommentId().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Commentaire introuvable"));
+    }
+
     private Task findTaskById(String taskId) {
         return taskRepository.findById(taskId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Tâche introuvable"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tâche introuvable"));
     }
 
     private BoardColumn findColumnById(String columnId) {
         return boardColumnRepository.findById(columnId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Colonne introuvable"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Colonne introuvable"));
     }
 
     private void checkIsMember(String boardId, String pseudo) {
         if (!boardMemberRepository.existsByIdIdBoardAndIdPseudoUser(boardId, pseudo)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Vous n'avez pas accès à ce tableau");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé");
         }
     }
 
@@ -238,9 +231,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setUserId(c.getUserId());
         dto.setMessage(c.getMessage());
         dto.setDate(c.getDate());
-        dto.setAttachments(c.getAttachments().stream()
-                .map(this::toAttachmentDto)
-                .toList());
+        dto.setAttachments(c.getAttachments().stream().map(this::toAttachmentDto).toList());
         return dto;
     }
 

@@ -10,6 +10,8 @@ import { Admin } from "./pages/Admin.tsx";
 import { BoardDetail } from "./pages/BoardDetail.tsx";
 import { Invitations } from "./pages/Invitation.tsx";
 import { TaskDetails } from "./pages/TaskDetails.tsx";
+import { AdminStats } from "./pages/AdminStats.tsx";
+import { Logs } from "./pages/Logs.tsx";
 
 export interface User {
   pseudo: string;
@@ -26,6 +28,7 @@ function App() {
         if (!parsed.token) return null;
         return parsed;
       } catch (e) {
+        console.error("Error parsing user from localStorage:", e);
         return null;
       }
     }
@@ -110,28 +113,62 @@ function App() {
         />
 
         <Route
-  path="/invitations"
-  element={
-    user ? (
-      <Invitations user={user} />
-    ) : (
-      <Navigate to="/login" />
-    )
-  }
-/>
+          path="/invitations"
+          element={
+            user ? (
+              <Invitations user={user} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
 
-<Route
-  path="/board/:boardId/tasks/:taskId"
-  element={
-    user ? (
-      <TaskDetails user={user} onLogout={handleLogout} />
-    ) : (
-      <Navigate to="/login" />
-    )
-  }
-/>
+        <Route
+          path="/board/:boardId/tasks/:taskId"
+          element={
+            user ? (
+              <TaskDetails user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
 
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route
+          path="/admin/stats"
+          element={
+            user && user.role === "ADMIN" ? (
+              <AdminStats user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          }
+        />
+
+      <Route
+        path="/board/:boardId/logs"
+        element={
+          user && user.role === "ADMIN" ? (
+            <Logs user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/dashboard" />
+          )
+        }
+      />
+
+      <Route
+        path="/admin/logs"
+        element={
+          user && user.role === "ADMIN" ? (
+            <Logs user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/dashboard" />
+          )
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" />} />
+
       </Routes>
     </Router>
   );

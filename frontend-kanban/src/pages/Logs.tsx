@@ -28,7 +28,13 @@ export function Logs({ user, onLogout }: LogsProps) {
   const [page, setPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // Vérification stricte du rôle Admin au montage du composant
+  const getEndpoint = () => {
+    const baseUrl = "http://localhost:8000";
+    if (taskId) return `${baseUrl}/tasks/${taskId}/logs`;
+    if (boardId) return `${baseUrl}/boards/${boardId}/logs`;
+    return `${baseUrl}/admin/logs`;
+  };
+
   useEffect(() => {
     if (user.role?.toUpperCase() !== "ADMIN") {
       navigate("/dashboard");
@@ -37,18 +43,24 @@ export function Logs({ user, onLogout }: LogsProps) {
     }
   }, [user, navigate, page, boardId, taskId]);
 
-  const isTaskLog = !!taskId;
-  const endpoint = isTaskLog 
-    ? `http://localhost:8000/tasks/${taskId}/logs?page=${page}&size=10`
-    : `http://localhost:8000/boards/${boardId}/logs?page=${page}&size=10`;
-
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${user.token}` },
+      setError(null);
+
+      const url = new URL(getEndpoint());
+      url.searchParams.set("page", page.toString());
+      url.searchParams.set("size", "10");
+
+      const response = await fetch(url.toString(), {
+        headers: { 
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json"
+        },
       });
+
       const result = await response.json();
+
       if (response.ok && result.success) {
         setData(result.data);
       } else {
@@ -66,11 +78,17 @@ export function Logs({ user, onLogout }: LogsProps) {
     return new Date(dateString).toLocaleString('fr-FR');
   };
 
-  // Styles pour les types d'actions
   const getActionStyle = (type: string) => {
     if (type.includes("CREATED")) return "bg-green-100 text-green-700 border-green-200";
     if (type.includes("DELETED")) return "bg-red-100 text-red-700 border-red-200";
     return "bg-blue-100 text-blue-700 border-blue-200";
+  };
+
+  // Titre dynamique pour l'en-tête
+  const getLogTitle = () => {
+    if (taskId) return "Logs de la Tâche";
+    if (boardId) return "Logs du Tableau";
+    return "Logs Système Globaux";
   };
 
   return (
@@ -94,10 +112,10 @@ export function Logs({ user, onLogout }: LogsProps) {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  Historique Admin
+                  {getLogTitle()}
                 </h1>
                 <p className="text-xs text-gray-500 font-mono">
-                  {isTaskLog ? `TASK_ID: ${taskId}` : `BOARD_ID: ${boardId}`}
+                  {taskId ? `TASK: ${taskId}` : boardId ? `BOARD: ${boardId}` : "ADMIN_SCOPE"}
                 </p>
               </div>
             </div>
@@ -116,7 +134,7 @@ export function Logs({ user, onLogout }: LogsProps) {
               </div>
             ) : data?.content && data.content.length > 0 ? (
               <div className="divide-y divide-gray-50">
-                {data?.content.map((log: ActionLogDto) => (
+                {data.content.map((log: ActionLogDto) => (
                   <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
                     <div className="flex items-start gap-4">
                       <div className={`mt-1 p-2 rounded-full border ${getActionStyle(log.actionType)}`}>

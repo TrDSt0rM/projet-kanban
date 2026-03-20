@@ -1,9 +1,13 @@
 package com.example.servertomcat.comment;
 
 import com.example.servertomcat.comment.dtos.*;
+import org.springframework.core.io.Resource;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,7 +22,27 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    // Commentaires
+    // --- Gestion des fichiers (Binaire) ---
+
+    @GetMapping("/files/{fileId}")
+    public ResponseEntity<Resource> getFile(@PathVariable String fileId) {
+        Resource resource = commentService.loadFileAsResource(fileId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+
+    @PostMapping(value = "/tasks/{taskId}/attachments/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AttachmentDto> uploadTaskAttachment(
+            @PathVariable String taskId,
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("X-User-Pseudo") String pseudo) {
+        return ResponseEntity.status(201).body(commentService.saveTaskAttachment(taskId, file, pseudo));
+    }
+
+    // --- Gestion des commentaires ---
+
     @GetMapping("/tasks/{taskId}/comments")
     public ResponseEntity<List<CommentDto>> getComments(
             @PathVariable String taskId,
@@ -31,8 +55,7 @@ public class CommentController {
             @PathVariable String taskId,
             @Valid @RequestBody CommentCreateDto dto,
             @RequestHeader("X-User-Pseudo") String pseudo) {
-        return ResponseEntity.status(201)
-                .body(commentService.addComment(taskId, dto, pseudo));
+        return ResponseEntity.status(201).body(commentService.addComment(taskId, dto, pseudo));
     }
 
     @PutMapping("/tasks/{taskId}/comments/{commentId}")
@@ -41,8 +64,7 @@ public class CommentController {
             @PathVariable String commentId,
             @Valid @RequestBody CommentUpdateDto dto,
             @RequestHeader("X-User-Pseudo") String pseudo) {
-        return ResponseEntity.ok(
-                commentService.updateComment(taskId, commentId, dto, pseudo));
+        return ResponseEntity.ok(commentService.updateComment(taskId, commentId, dto, pseudo));
     }
 
     @DeleteMapping("/tasks/{taskId}/comments/{commentId}")
@@ -54,43 +76,13 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
-    // Pièces jointes d'un commentaire
-    @PostMapping("/tasks/{taskId}/comments/{commentId}/attachments")
-    public ResponseEntity<CommentDto> addAttachmentToComment(
-            @PathVariable String taskId,
-            @PathVariable String commentId,
-            @Valid @RequestBody AttachmentCreateDto dto,
-            @RequestHeader("X-User-Pseudo") String pseudo) {
-        return ResponseEntity.status(201)
-                .body(commentService.addAttachmentToComment(
-                        taskId, commentId, dto, pseudo));
-    }
+    // --- Gestion des pièces jointes (Métadonnées) ---
 
-    @DeleteMapping("/tasks/{taskId}/comments/{commentId}/attachments/{fileId}")
-    public ResponseEntity<Void> deleteAttachmentFromComment(
-            @PathVariable String taskId,
-            @PathVariable String commentId,
-            @PathVariable String fileId,
-            @RequestHeader("X-User-Pseudo") String pseudo) {
-        commentService.deleteAttachmentFromComment(taskId, commentId, fileId, pseudo);
-        return ResponseEntity.noContent().build();
-    }
-
-    // Pièces jointes d'une tâche
     @GetMapping("/tasks/{taskId}/attachments")
     public ResponseEntity<List<AttachmentDto>> getTaskAttachments(
             @PathVariable String taskId,
             @RequestHeader("X-User-Pseudo") String pseudo) {
         return ResponseEntity.ok(commentService.getTaskAttachments(taskId, pseudo));
-    }
-
-    @PostMapping("/tasks/{taskId}/attachments")
-    public ResponseEntity<AttachmentDto> addTaskAttachment(
-            @PathVariable String taskId,
-            @Valid @RequestBody AttachmentCreateDto dto,
-            @RequestHeader("X-User-Pseudo") String pseudo) {
-        return ResponseEntity.status(201)
-                .body(commentService.addTaskAttachment(taskId, dto, pseudo));
     }
 
     @DeleteMapping("/tasks/{taskId}/attachments/{fileId}")
