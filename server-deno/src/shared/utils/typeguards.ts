@@ -256,21 +256,16 @@ export function isTaskCreateRequest(obj: unknown): obj is TaskCreateRequest {
 }
 
 export function isTaskSummaryDto(obj: unknown): obj is TaskSummaryDto {
+  if (!obj || typeof obj !== "object") return false;
+  const candidate = obj as Record<string, unknown>;
   return (
-    !!obj &&
-    typeof obj === "object" &&
-    "idTask" in obj &&
-    typeof obj.idTask === "string" &&
-    "taskName" in obj &&
-    typeof obj.taskName === "string" &&
-    "description" in obj &&
-    typeof obj.description === "string" &&
-    "position" in obj &&
-    typeof obj.position === "number" &&
-    "priority" in obj &&
-    typeof obj.priority === "string" &&
-    ("limitDate" in obj ? typeof obj.limitDate === "string" : true) &&
-    ("assignedTo" in obj ? typeof obj.assignedTo === "string" : true)
+    typeof candidate.idTask === "string" &&
+    typeof candidate.taskName === "string" &&
+    typeof candidate.position === "number" &&
+    typeof candidate.priority === "string" &&
+    (candidate.description === null || typeof candidate.description === "string") &&
+    (candidate.limitDate === null || typeof candidate.limitDate === "string") &&
+    (candidate.assignedUserPseudo === null || typeof candidate.assignedUserPseudo === "string")
   );
 }
 

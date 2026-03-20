@@ -11,11 +11,11 @@ import org.mapstruct.Named;
 public interface TaskMapper {
 
     @Named("toSummaryDto")
-    @Mapping(source = "assignedUser.pseudo", target = "assignedUserPseudo")
+    @Mapping(source = "assignedUser.pseudo", target = "assignedUserPseudo", defaultValue = "")
     TaskSummaryDto toDto(Task task);
 
     @Named("toDetailDto")
-    @Mapping(source = "assignedUser.pseudo", target = "assignedUserPseudo")
+    @Mapping(source = "assignedUser.pseudo", target = "assignedUserPseudo", defaultValue = "")
     @Mapping(target = "comments", ignore = true)
     @Mapping(target = "taskAttachments", ignore = true)
     TaskDetailDto toDetailDto(Task task);

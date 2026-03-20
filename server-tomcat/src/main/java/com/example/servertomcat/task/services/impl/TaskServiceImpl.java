@@ -84,20 +84,33 @@ public class TaskServiceImpl implements TaskService {
         Task task = new Task();
         task.setIdTask(UUID.randomUUID().toString());
         task.setTaskName(dto.getTaskName());
-        task.setDescription(dto.getDescription());
+
+        // Nettoyage de la description (évite les "" qui traînent)
+        String desc = (dto.getDescription() != null && !dto.getDescription().isBlank())
+                ? dto.getDescription() : null;
+        task.setDescription(desc);
+
         task.setPosition(nextPosition);
         task.setPriority(dto.getPriority());
+
+        // Sécurité : LocalDate peut planter si le JSON est mal formé ou vide
         task.setLimitDate(dto.getLimitDate());
+
         task.setColumn(column);
 
-        if (dto.getAssignedUserPseudo() != null) {
+        // Gestion de l'utilisateur assigné
+        if (dto.getAssignedUserPseudo() != null && !dto.getAssignedUserPseudo().isBlank()) {
             User user = userRepository.findById(dto.getAssignedUserPseudo())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Utilisateur introuvable"));
             task.setAssignedUser(user);
+        } else {
+            task.setAssignedUser(null);
         }
 
-        return taskMapper.toDto(taskRepository.save(task));
+        Task savedTask = taskRepository.save(task);
+
+        return taskMapper.toDto(savedTask);
     }
 
     @Override

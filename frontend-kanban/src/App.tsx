@@ -9,6 +9,7 @@ import { Profile } from "./pages/Profile.tsx";
 import { Admin } from "./pages/Admin.tsx";
 import { BoardDetail } from "./pages/BoardDetail.tsx";
 import { Invitations } from "./pages/Invitation.tsx";
+import { TaskDetails } from "./pages/TaskDetails.tsx";
 
 export interface User {
   pseudo: string;
@@ -118,6 +119,8 @@ function App() {
     )
   }
 />
+
+        <Route path="/board/:boardId/task/:taskId" element={<TaskDetails />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
