@@ -120,7 +120,7 @@ function App() {
   }
 />
 
-        <Route path="/board/:boardId/task/:taskId" element={<TaskDetails />} />
+        <Route path="/board/:boardId/tasks/:taskId" element={<TaskDetails />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

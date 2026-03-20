@@ -174,15 +174,17 @@ export function BoardDetail({
       alert("Erreur réseau.");
     }
   };
-
-  const getPriorityStyles = (p: string) => {
-  switch (p) {
+  const
+    getPriorityStyles = (p: string | null) => {
+  const priority = p?.toUpperCase() || "LOW"; 
+  
+  switch (priority) {
     case "HIGH": return "bg-red-100 text-red-700 border-red-200";
     case "MEDIUM": return "bg-amber-100 text-amber-700 border-amber-200";
     case "LOW": return "bg-emerald-100 text-emerald-700 border-emerald-200";
     default: return "bg-gray-100 text-gray-700";
   }
-  };
+};
   
   const handleDeleteTask = async (taskId: string) => {
   if (!window.confirm("Supprimer cette tâche ?")) return;
@@ -519,31 +521,32 @@ const handleDeleteColumn = async (columnId: string) => {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className="bg-white p-4 mb-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all group relative"
+                              onClick={() => navigate(`/board/${boardId}/tasks/${task.idTask}`)}
+                              className="bg-white p-4 mb-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-md transition-all group relative cursor-pointer active:scale-[0.98]"
                             >
-                              {/* Header de la tâche : Priorité + Bouton Supprimer */}
+                              {/* Header de la tâche */}
                               <div className="flex justify-between items-start mb-2">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getPriorityStyles(task.priority)}`}>
-                                  {task.priority}
-                                </span>
-                                
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getPriorityStyles(task.priority)}`}>
+                                {task.priority || "LOW"}
+                              </span>
                                 <button 
-                                  onClick={() => handleDeleteTask(task.idTask)}
-                                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // CRUCIAL : Empêche l'ouverture de la page de détails
+                                    handleDeleteTask(task.idTask);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all rounded-md hover:bg-red-50"
                                   title="Supprimer la tâche"
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
+                                  <Trash2 className="size-4" />
                                 </button>
                               </div>
 
                               {/* Contenu */}
-                              <p className="text-gray-700 font-semibold text-sm leading-tight">
+                              <p className="text-gray-800 font-semibold text-sm leading-tight group-hover:text-blue-600 transition-colors">
                                 {task.taskName}
                               </p>
 
-                              {/* Footer : Date limite si elle existe */}
+                              {/* Footer : Date limite */}
                               {task.limitDate && (
                                 <div className="mt-3 pt-2 border-t border-gray-50 flex items-center text-[10px] text-gray-400">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
