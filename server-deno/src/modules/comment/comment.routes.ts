@@ -3,7 +3,8 @@ import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { commentService } from "../../shared/container.ts";
 import { 
     APIException, APIErrorCode, APIResponse, 
-    CommentDto
+    CommentDto,
+    AttachmentDto
 } from "../../shared/types/mod.ts";
 
 export const router = new Router();
@@ -91,6 +92,27 @@ router.put("/tasks/:taskId/comments/:commentId", async (ctx) => {
     ctx.response.body = responseBody;
 });
 
+router.delete("/tasks/:taskId/comments/:commentId", async (ctx) => {
+    const taskId = ctx.params.taskId!;
+    const commentId = ctx.params.commentId!;
+    const userPseudo = ctx.state.user?.pseudo;
+    
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    await commentService.deleteComment(taskId, commentId, userPseudo);
+
+    // Construction de la réponse
+    const responseBody : APIResponse<null> = {
+        success: true,
+        data: null,
+    }    
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
 router.post("/tasks/:taskId/comments/:commentId/attachments", async (ctx) => {
     const taskId = ctx.params.taskId!;
     const commentId = ctx.params.commentId!;
@@ -110,6 +132,72 @@ router.post("/tasks/:taskId/comments/:commentId/attachments", async (ctx) => {
     const responseBody : APIResponse<CommentDto> = {
         success: true,
         data: updatedComment,
+    }    
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
+router.post("/tasks/:taskId/attachments", async (ctx) => {
+    const taskId = ctx.params.taskId!;
+    const userPseudo = ctx.state.user?.pseudo;
+    
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+    
+    // Récupération des données de la requête
+    const body = await ctx.request.body.json();
+
+    const attachment = await commentService.addAttachmentToTask(taskId, body, userPseudo);
+    
+    // Construction de la réponse
+    const responseBody : APIResponse<AttachmentDto> = {
+        success: true,
+        data: attachment
+    };
+    ctx.response.status = 201;
+    ctx.response.body = responseBody;
+});
+
+router.get("/tasks/:taskId/attachments", async (ctx) => {
+    const taskId = ctx.params.taskId!;
+    const userPseudo = ctx.state.user?.pseudo;
+    
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+    
+    // Récupération des pièces jointes de la tâche depuis le service avec l'id de la tâche
+    const attachments = await commentService.getAttachmentsByTaskId(taskId, userPseudo);
+
+    // Construction de la réponse
+    const responseBody : APIResponse<AttachmentDto[]> = {
+        success: true,
+        data: attachments,
+    }    
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
+router.delete("/tasks/:taskId/attachments/:attachmentId", async (ctx) => {
+    const taskId = ctx.params.taskId!;
+    const attachmentId = ctx.params.attachmentId!;
+    const userPseudo = ctx.state.user?.pseudo;
+    
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    // Suppression de la pièce jointe depuis le service
+    await commentService.deleteAttachmentFromTask(taskId, attachmentId, userPseudo);
+
+    // Construction de la réponse
+    const responseBody : APIResponse<null> = {
+        success: true,
+        data: null,
     }    
     ctx.response.status = 200;
     ctx.response.body = responseBody;
