@@ -24,11 +24,20 @@ export class AuthService {
     );
 
     if (!response.ok) {
-      throw new APIException(
-        APIErrorCode.NOT_FOUND,
-        404,
-        "Utilisateur inconnu",
-      );
+      const error = await response.json();
+    
+      switch (response.status) {
+        case 400:
+          throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+        case 404:
+          throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+        default:
+          throw new APIException(
+            APIErrorCode.INTERNAL_SERVER_ERROR, 
+            500, 
+            "Erreur lors de la communication avec le serveur"
+          );
+      }
     }
 
     const rawData: TomcatUserDto = await response.json();
@@ -48,7 +57,7 @@ export class AuthService {
       throw new APIException(
         APIErrorCode.FORBIDDEN,
         403,
-        "Utilisateur inactif",
+        "Utilisateur désactivé, veuillez contacter un administrateur",
       );
     }
 
@@ -85,18 +94,20 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      if (response.status === 409) {
-        throw new APIException(
-          APIErrorCode.CONFLICT,
-          409,
-          "Ce pseudo est déjà utilisé",
-        );
+      const error = await response.json();
+    
+      switch (response.status) {
+        case 400:
+          throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+        case 409:
+          throw new APIException(APIErrorCode.CONFLICT, 409, error.message);
+        default:
+          throw new APIException(
+            APIErrorCode.INTERNAL_SERVER_ERROR, 
+            500, 
+            "Erreur lors de la communication avec le serveur"
+          );
       }
-      throw new APIException(
-        APIErrorCode.BAD_REQUEST,
-        400,
-        "Échec de l'enregistrement",
-      );
     }
 
     return true;
