@@ -312,15 +312,15 @@ export function isTaskUpdateRequest(obj: unknown): obj is TaskUpdateRequest {
 export function isCommentCreateRequest(obj: unknown): obj is CommentCreateRequest {
     return !!obj && 
     typeof obj === "object" && 
-    "content" in obj && 
-    typeof obj.content === "string";
+    "message" in obj && 
+    typeof obj.message === "string";
 }
 
 export function isCommentUpdateRequest(obj: unknown): obj is CommentUpdateRequest {
     return !!obj && 
     typeof obj === "object" && 
-    "content" in obj && 
-    typeof obj.content === "string";
+    "message" in obj && 
+    typeof obj.message === "string";
 }
 
 export function isCommentDto(obj: unknown): obj is CommentDto {

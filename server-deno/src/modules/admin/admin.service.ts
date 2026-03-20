@@ -5,6 +5,8 @@ import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import { APIException, APIErrorCode, UserDto, UserUpdateRequest } from "../../shared/types/mod.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 import { isUserDto, isUserUpdateRequest } from "../../shared/utils/typeguards.ts";
+import { StatsDto } from "./admin.type.ts";
+import { isStatsDto } from "./admin.typeguards.ts";
 
 export class AdminService {
     constructor() {}
@@ -138,5 +140,37 @@ export class AdminService {
         }
 
         return;
+    }
+
+    async getStats(): Promise<StatsDto> {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/admin/stats`, {
+            method: "GET",
+        });
+
+        if(!response.ok) {
+            const error = await response.json();
+
+            switch(response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, response.status, error.message || "Requête invalide");
+                case 401:
+                    throw new APIException(APIErrorCode.UNAUTHORIZED, response.status, error.message || "Non autorisé");
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, response.status, error.message || "Accès interdit");
+                default:
+                    throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, response.status, error.message || "Erreur lors de la récupération des statistiques");
+            }
+        }
+
+        const stats: StatsDto = await response.json();
+        if (!isStatsDto(stats)) {
+            throw new APIException(
+                APIErrorCode.INTERNAL_SERVER_ERROR,
+                500,
+                "Données retournées par Tomcat non conformes à StatsDto",
+            );
+        }
+
+        return stats;
     }
 }

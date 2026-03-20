@@ -4,6 +4,7 @@ import { router as adminRouter } from "./src/modules/admin/admin.routes.ts";
 import { router as authRouter } from "./src/modules/auth/auth.routes.ts";
 import { router as boardRouter } from "./src/modules/board/board.routes.ts";
 import { router as boardColumnRouter } from "./src/modules/boardColumn/boardColumn.routes.ts";
+import { router as commentRouter } from "./src/modules/comment/comment.routes.ts";
 import { router as invitationRouter } from "./src/modules/invitation/invitation.routes.ts";
 import { router as taskRouter } from "./src/modules/task/task.routes.ts";
 import { router as userRouter } from "./src/modules/user/user.routes.ts";
@@ -35,6 +36,7 @@ app.use(authRouter.routes(), authRouter.allowedMethods());
 app.use(invitationRouter.routes(), invitationRouter.allowedMethods());
 app.use(boardRouter.routes(), boardRouter.allowedMethods());
 app.use(boardColumnRouter.routes(), boardColumnRouter.allowedMethods());
+app.use(commentRouter.routes(), commentRouter.allowedMethods());
 app.use(taskRouter.routes(), taskRouter.allowedMethods());
 app.use(userRouter.routes(), userRouter.allowedMethods());
 

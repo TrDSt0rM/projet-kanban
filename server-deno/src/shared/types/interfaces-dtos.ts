@@ -157,7 +157,7 @@ export interface AttachmentCreateRequest {
 }
 
 export interface CommentCreateRequest {
-    content: string;
+    message: string;
 }
 export interface CommentDto {
     commentId: string;
@@ -168,7 +168,7 @@ export interface CommentDto {
 }
 
 export interface CommentUpdateRequest {
-    content: string;
+    message: string;
 }
 
 /** =================================================

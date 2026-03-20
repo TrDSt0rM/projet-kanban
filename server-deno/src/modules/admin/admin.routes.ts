@@ -5,6 +5,7 @@ import { Router } from "@oak/oak";
 import { authMiddleware, adminOnlyMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { adminService } from "../../shared/container.ts";
 import { APIException, APIErrorCode, APIResponse, UserDto } from "../../shared/types/mod.ts";
+import { StatsDto } from "./admin.type.ts";
 
 export const router = new Router({ prefix: "/admin" });
 
@@ -132,3 +133,22 @@ router.delete("/users/:pseudo", adminOnlyMiddleware, async (ctx) => {
     ctx.response.body = responseBody;
 });
 
+router.get("/stats", adminOnlyMiddleware, async (ctx) => {
+    const adminPseudo = ctx.state.user?.pseudo;
+
+    // Vérification de l'authentification de l'utilisateur
+    if (!adminPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    // Récupération des statistiques depuis le service
+    const stats = await adminService.getStats();
+
+    // Construction de la réponse
+    const responseBody: APIResponse<StatsDto> = {
+        success: true,
+        data: stats,
+    };
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
