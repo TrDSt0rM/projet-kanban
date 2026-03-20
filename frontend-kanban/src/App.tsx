@@ -120,7 +120,16 @@ function App() {
   }
 />
 
-        <Route path="/board/:boardId/task/:taskId" element={<TaskDetails />} />
+<Route
+  path="/board/:boardId/tasks/:taskId"
+  element={
+    user ? (
+      <TaskDetails user={user} onLogout={handleLogout} />
+    ) : (
+      <Navigate to="/login" />
+    )
+  }
+/>
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

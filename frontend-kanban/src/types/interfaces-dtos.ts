@@ -6,6 +6,22 @@
  */
 
 /** =================================================
+ * Interface Statistique
+ ================================================= */
+export interface UserActivityDto {
+    pseudo: string;
+    taskCount: number;
+    boardCount: number;
+}
+
+export interface StatsDto {
+    totalUsers: number;
+    totalBoards: number;
+    totalTasks: number;
+    userActivity: UserActivityDto[];
+}
+
+/** =================================================
  * Interface User
  ================================================= */
 export interface UserDto {
@@ -69,11 +85,11 @@ export interface BoardColumnDto {
     idColumn: string;
     columnName: string;
     position: number;
-    tasks: TaskDto[];
+    tasks: TaskSummaryDto[];
 }
 
 export interface BoardColumnUpdatePositionRequest {
-    newPosition: number;
+    position: number;
 }
 
 export interface BoardColumnUpdateRequest {
@@ -95,14 +111,19 @@ export interface TaskCreateRequest {
     assignedUserPseudo?: string;
 }
 
-export interface TaskDto {
+export interface TaskSummaryDto {
     idTask: string;
     taskName: string;
-    description: string;
+    description: string | null;
     position: number;
-    priority: string;
-    limitDate?: string;
-    assignedUserPseudo?: string;
+    priority: string | null;
+    limitDate: string | null;
+    assignedUserPseudo: string | null;
+}
+
+export interface TaskDetailDto extends TaskSummaryDto {
+    comments: CommentDto[];
+    taskAttachments: AttachmentDto[];
 }
 
 export interface TaskMoveRequest {
@@ -115,19 +136,39 @@ export interface TaskPositionRequest {
 
 export interface TaskUpdateRequest {
     taskName: string;
-    description?: string;
-    priority?: string;
-    limitDate?: string;
+    description?: string | null;
+    priority?: string | null;
+    limitDate?: string | null;
 }
 
 /** =================================================
  * Interface Comment
  ================================================= */
+export interface AttachmentDto{
+    fileId: string;
+    fileName: string;
+    empreinte: string;
+    uploaderId: string; // pseudo
+    uploaderDate: string;
+}
+export interface AttachmentCreateRequest {
+    fileName: string;
+    empreinte: string;
+}
 
-export interface CommentDtos {
-    id: string;
-    taskId: string;
-    content: string; 
+export interface CommentCreateRequest {
+    message: string;
+}
+export interface CommentDto {
+    commentId: string;
+    userId: string;
+    message: string;
+    date: string;
+    attachments: AttachmentDto[];
+}
+
+export interface CommentUpdateRequest {
+    message: string;
 }
 
 /** =================================================
