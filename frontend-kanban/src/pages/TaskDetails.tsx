@@ -1,146 +1,272 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-// On importe les bons noms exportés par ton fichier interfaces-dtos.ts
-import { TaskDetailDto, CommentDto } from "../types/interfaces-dtos";
+import { 
+  ChevronLeft, Save, Trash2, MessageSquare, 
+  Type, AlignLeft, Send, User 
+} from "lucide-react";
+import { Navbar } from "@/components/Navbar";
 
-export const TaskDetails = () => {
-    const { taskId } = useParams<{ taskId: string }>();
-    const navigate = useNavigate();
+export function TaskDetails({ user, onLogout }: { user: any, onLogout: () => void }) {
+  const { boardId, taskId } = useParams();
+  const navigate = useNavigate();
+
+  // États pour la tâche
+  const [task, setTask] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // États pour les commentaires
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+
+  useEffect(() => {
+    fetchTaskData();
+    fetchComments();
+  }, [taskId]);
+
+  const fetchTaskData = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setTask(result.data);
+      }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/tasks/${taskId}/comments`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setComments(result.data || []);
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateTask = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch(`http://localhost:8000/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          taskName: task.taskName,
+          description: task.description,
+          priority: task.priority,
+          limitDate: task.limitDate
+        }),
+      });
+      if (response.ok) {
+        alert("Tâche mise à jour !");
+      }
+    } catch (err) { alert("Erreur lors de la sauvegarde"); }
+    finally { setIsSaving(false); }
+  };
     
-    const [task, setTask] = useState<TaskDetailDto | null>(null);
-    const [comments, setComments] = useState<CommentDto[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const formatDate = (dateString: any) => {
+    if (!dateString) return "Date inconnue";
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? "Date invalide" : date.toLocaleDateString();
+  };
 
-    const getPriorityStyle = (priority: string | null) => {
-        if (!priority) return "bg-gray-100 text-gray-700 border-gray-200";
-        switch (priority.toLowerCase()) {
-            case 'high': return "bg-red-100 text-red-700 border-red-200";
-            case 'medium': return "bg-amber-100 text-amber-700 border-amber-200";
-            case 'low': return "bg-emerald-100 text-emerald-700 border-emerald-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
-        }
-    };
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
 
-    const fetchData = async () => {
-        if (!taskId) return;
-        setLoading(true);
-        try {
-            const savedUser = localStorage.getItem("kanban_user");
-            const user = savedUser ? JSON.parse(savedUser) : null;
-            const headers = {
-                "X-User-Pseudo": user?.pseudo || "",
-                "Authorization": `Bearer ${user?.token || ""}`,
-                "Content-Type": "application/json"
-            };
+    try {
+      const response = await fetch(`http://localhost:8000/tasks/${taskId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ message: newComment }), 
+      });
 
-            const [taskRes, commentRes] = await Promise.all([
-                fetch(`http://localhost:8000/tasks/${taskId}`, { headers }),
-                fetch(`http://localhost:8000/tasks/${taskId}/comments`, { headers })
-            ]);
+      if (response.ok) {
+        setNewComment("");
+        fetchComments();
+      } else {
+        const errorData = await response.json();
+        console.error("Erreur lors de l'ajout:", errorData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+    
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer ce commentaire ?")) return;
 
-            if (!taskRes.ok) throw new Error("Tâche introuvable");
-            
-            const taskBody = await taskRes.json();
-            const commentBody = await commentRes.json();
+    try {
+      const response = await fetch(`http://localhost:8000/tasks/${taskId}/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
 
-            setTask(taskBody.data);
-            setComments(commentBody.data || []);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+      if (response.ok) {
+        setComments(comments.filter(c => c.commentId !== commentId));
+      } else {
+        alert("Erreur lors de la suppression. Vérifiez vos droits.");
+      }
+    } catch (err) {
+      console.error("Erreur suppression:", err);
+    }
+  };
 
-    useEffect(() => {
-        fetchData();
-    }, [taskId]);
+  if (loading || !task) return <div className="p-10 text-center">Chargement...</div>;
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-screen text-slate-500">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-            <p className="font-medium">Chargement des détails...</p>
-        </div>
-    );
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Navbar user={user} onLogout={onLogout} />
+      
+      <div className="max-w-4xl mx-auto p-6">
+        <button 
+          onClick={() => navigate(`/board/${boardId}`)}
+          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 mb-6 transition-colors"
+        >
+          <ChevronLeft className="size-5" /> Retour au tableau
+        </button>
 
-    if (error || !task) return (
-        <div className="max-w-md mx-auto mt-20 p-6 bg-red-50 border border-red-200 rounded-xl text-center">
-            <p className="text-red-600 font-semibold">⚠️ {error || "Tâche introuvable"}</p>
-            <button onClick={() => navigate(-1)} className="mt-4 text-sm text-red-700 underline">Retourner au tableau</button>
-        </div>
-    );
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          {/* COLONNE GAUCHE : ÉDITION TÂCHE */}
+          <div className="md:col-span-2 space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex items-center gap-2 mb-4 text-blue-600">
+                <Type className="size-5" />
+                <h2 className="font-bold">Détails de la tâche</h2>
+              </div>
 
-    return (
-        <div className="min-h-screen bg-slate-50 py-8 px-4">
-            <div className="max-w-3xl mx-auto">
-                <button 
-                    onClick={() => navigate(-1)} 
-                    className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors mb-6 font-medium"
-                >
-                    <span className="mr-2">←</span> Retour au tableau
-                </button>
-
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="p-8">
-                        <header className="mb-8">
-                            <h1 className="text-3xl font-bold text-slate-800 mb-4">{task.taskName}</h1>
-                            
-                            <div className="flex flex-wrap gap-3">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getPriorityStyle(task.priority)}`}>
-                                    {(task.priority || "Normal").toUpperCase()}
-                                </span>
-                                {task.limitDate && (
-                                    <span className="flex items-center px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
-                                        <span className="mr-1.5">📅</span> {task.limitDate}
-                                    </span>
-                                )}
-                                {task.assignedUserPseudo && (
-                                    <span className="flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-medium border border-indigo-100">
-                                        <span className="mr-1.5">👤</span> {task.assignedUserPseudo}
-                                    </span>
-                                )}
-                            </div>
-                        </header>
-
-                        <section className="mb-10">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">Description</h3>
-                            <div className="bg-slate-50 rounded-xl p-5 text-slate-700 leading-relaxed border border-slate-100">
-                                {task.description || <i className="text-slate-400">Aucune description fournie.</i>}
-                            </div>
-                        </section>
-
-                        <hr className="border-slate-100 mb-10" />
-
-                        <section>
-                            <h3 className="text-xl font-bold text-slate-800 mb-6">
-                                Commentaires <span className="text-indigo-500 ml-1">({comments.length})</span>
-                            </h3>
-
-                            <div className="space-y-4">
-                                {comments.length === 0 ? (
-                                    <div className="text-center py-10 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-                                        <p className="text-slate-400 italic">Pas encore de commentaires.</p>
-                                    </div>
-                                ) : (
-                                    comments.map((c) => (
-                                        <div key={c.commentId} className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
-                                            <div className="flex items-center mb-2">
-                                                <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs mr-3">
-                                                    {c.userId?.charAt(0).toUpperCase() || "?"}
-                                                </div>
-                                                <span className="font-semibold text-slate-700 text-sm">@{c.userId}</span>
-                                                <span className="ml-auto text-[10px] text-slate-400">{new Date(c.date).toLocaleDateString()}</span>
-                                            </div>
-                                            <p className="text-slate-600 text-sm ml-11">{c.message}</p>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </section>
-                    </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase">Nom de la tâche</label>
+                  <input 
+                    className="w-full text-xl font-bold p-2 border-b focus:border-blue-500 outline-none transition-colors"
+                    value={task.taskName}
+                    onChange={(e) => setTask({...task, taskName: e.target.value})}
+                  />
                 </div>
+
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase flex items-center gap-1">
+                    <AlignLeft className="size-3" /> Description
+                  </label>
+                  <textarea 
+                    className="w-full mt-2 p-3 bg-slate-50 rounded-xl border border-transparent focus:border-blue-200 outline-none min-h-[150px]"
+                    value={task.description || ""}
+                    placeholder="Ajouter une description détaillée..."
+                    onChange={(e) => setTask({...task, description: e.target.value})}
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* SECTION COMMENTAIRES */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex items-center gap-2 mb-6 text-blue-600">
+                <MessageSquare className="size-5" />
+                <h2 className="font-bold">Commentaires ({comments.length})</h2>
+              </div>
+
+              <form onSubmit={handleAddComment} className="flex gap-2 mb-8">
+                <input 
+                  className="flex-1 bg-slate-50 border-none rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Écrire un commentaire..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                <button className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors">
+                  <Send className="size-5" />
+                </button>
+              </form>
+
+              <div className="space-y-4">
+                {comments.map((c: any) => (
+                  <div key={c.commentId} className="flex gap-3 group"> 
+                    <div className="size-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">
+                      <User className="size-4" />
+                    </div>
+                    <div className="flex-1 bg-slate-50 p-3 rounded-xl relative text-sm border border-transparent hover:border-slate-200 transition-all">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-blue-800">{c.userId || "Anonyme"}</span>
+                        
+                        {/* Bouton supprimer visible si propriétaire ou admin */}
+                        {(c.userId === user.pseudo || user.role === 'ADMIN') && (
+                          <button 
+                            onClick={() => handleDeleteComment(c.commentId)}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      
+                      <p className="text-gray-700 whitespace-pre-wrap">{c.message}</p>
+                      
+                      <div className="mt-2 text-[10px] text-gray-400">
+                        {formatDate(c.date)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* COLONNE DROITE : PROPRIÉTÉS & ACTIONS */}
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-800 mb-4">Propriétés</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 block mb-1">Priorité</label>
+                  <select 
+                    value={task.priority}
+                    onChange={(e) => setTask({...task, priority: e.target.value})}
+                    className="w-full p-2 bg-slate-50 rounded-lg border-none outline-none font-medium"
+                  >
+                    <option value="LOW">Basse</option>
+                    <option value="MEDIUM">Moyenne</option>
+                    <option value="HIGH">Urgente</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-gray-400 block mb-1">Date limite</label>
+                  <input 
+                    type="date"
+                    value={task.limitDate?.split('T')[0] || ""}
+                    onChange={(e) => setTask({...task, limitDate: e.target.value})}
+                    className="w-full p-2 bg-slate-50 rounded-lg border-none outline-none"
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleUpdateTask}
+                disabled={isSaving}
+                className="w-full mt-8 bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 transition-all active:scale-95 shadow-lg shadow-green-100"
+              >
+                {isSaving ? "Enregistrement..." : <><Save className="size-5" /> Enregistrer</>}
+              </button>
+            </div>
+          </div>
+
         </div>
-    );
-};
+      </div>
+    </div>
+  );
+}
