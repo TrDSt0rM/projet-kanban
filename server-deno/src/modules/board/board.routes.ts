@@ -9,7 +9,8 @@ import { authMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { boardService } from "../../shared/container.ts";
 import { 
     APIException, APIErrorCode, APIResponse, 
-    BoardDetailDto, BoardMemberDto, BoardSummaryDto
+    BoardDetailDto, BoardSummaryDto,
+    BoardMemberDto
 } from "../../shared/types/mod.ts";
 
 export const router = new Router({ prefix: "/boards" });
@@ -53,7 +54,7 @@ router.get("/", async (ctx) => {
  * @returns le tableau correspondant à l'id
  * @throws 404 si aucun tableau ne correspond à l'id
  * @throws 500 si une erreur interne se produit lors de la récupération du tableau depuis Tomcat
- * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardDto
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardDetailDto
  */
 router.get("/:boardId", async (ctx) => {
     const boardId = ctx.params.boardId!;
@@ -181,6 +182,38 @@ router.delete("/:id", async (ctx) => {
         success: true,
         data: null,
     };
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
+/**
+ * Récupère les membres d'un tableau à partir de l'id du tableau. Seul les membres du tableau peuvent récupérer les membres du tableau.
+ * @route GET /boards/:boardId/members
+ * @param boardId l'id du tableau dont on veut récupérer les membres
+ * @returns les membres du tableau si la récupération a réussi, sinon lance une APIException avec un message d'erreur approprié
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas membre du tableau
+ * @throws 404 si aucun tableau ne correspond à l'id
+ * @throws 500 si une erreur interne se produit lors de la récupération des membres du tableau dans Tomcat
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardMemberDto[]
+ */
+router.get("/:boardId/members", async (ctx) => {
+    const boardId = ctx.params.boardId!;
+    const userPseudo = ctx.state.user?.pseudo;
+
+    // Vérification que le pseudo de l'utilisateur est présent dans le contexte
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    // Récupération des membres du tableau en utilisant le service de tableau et récupération des membres du tableau
+    const members = await boardService.getBoardMembers(boardId, userPseudo);
+
+    // Création de la réponse avec les membres du tableau
+    const responseBody : APIResponse<BoardMemberDto[]> = {
+        success: true,
+        data: members,
+    }
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
