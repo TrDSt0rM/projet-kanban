@@ -2,7 +2,7 @@ import { Router } from "@oak/oak";
 import { authMiddleware, adminOnlyMiddleware } from "../../shared/middlewares/auth.middleware.ts";
 import { actionLogService } from "../../shared/container.ts";
 import { APIException, APIErrorCode, APIResponse } from "../../shared/types/mod.ts";
-import { ActionLogDto } from "./actionLog.type.ts";
+import { PageableActionLogDto } from "./actionLog.type.ts";
 
 export const router = new Router();
 
@@ -24,7 +24,7 @@ router.get("/boards/:boardId/logs", adminOnlyMiddleware, async (ctx) => {
     const logs = await actionLogService.getActionLogsByBoardId(boardId, page, size, userPseudo);
 
     // Construction de la réponse
-    const responseBody : APIResponse<ActionLogDto[]> = {
+    const responseBody : APIResponse<PageableActionLogDto> = {
         success: true,
         data: logs,
     }
@@ -32,7 +32,7 @@ router.get("/boards/:boardId/logs", adminOnlyMiddleware, async (ctx) => {
     ctx.response.body = responseBody;
 });
 
-router.get("tasks/:taskId/logs/", adminOnlyMiddleware, async (ctx) => {
+router.get("/tasks/:taskId/logs", adminOnlyMiddleware, async (ctx) => {
     const taskId = ctx.params.taskId!;
     const userPseudo = ctx.state.user?.pseudo;
     
@@ -48,7 +48,7 @@ router.get("tasks/:taskId/logs/", adminOnlyMiddleware, async (ctx) => {
     const logs = await actionLogService.getActionLogsByTaskId(taskId, page, size, userPseudo);
 
     // Construction de la réponse
-    const responseBody : APIResponse<ActionLogDto[]> = {
+    const responseBody : APIResponse<PageableActionLogDto> = {
         success: true,
         data: logs,
     }

@@ -1,8 +1,8 @@
 import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import { APIException, APIErrorCode } from "../../shared/types/mod.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
-import { ActionLogDto } from "./actionLog.type.ts";
-import { isActionLogDto } from "./actionLog.typeguards.ts";
+import { PageableActionLogDto } from "./actionLog.type.ts";
+import { isPageableActionLogDto } from "./actionLog.typeguards.ts";
 
 export class ActionLogService {
     constructor() {}
@@ -15,7 +15,7 @@ export class ActionLogService {
      * @param userPseudo le pseudo de l'utilisateur
      * @returns les logs d'actions du tableau
      */
-    async getActionLogsByBoardId(boardId: string, page: string, size: string, userPseudo: string) : Promise<ActionLogDto[]> {
+    async getActionLogsByBoardId(boardId: string, page: string, size: string, userPseudo: string) : Promise<PageableActionLogDto> {
         // Construction de l'URL pour récupérer les logs d'actions du tableau
         const url = new URL(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/logs`);
         url.searchParams.set("page", page);
@@ -54,19 +54,19 @@ export class ActionLogService {
         }
 
         // reponse 2**, on traite les données
-        const actionLogs = await response.json();
+        const pageableActionLogs = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(actionLogs) || !actionLogs.every(isActionLogDto)) {
+        if (!isPageableActionLogDto(pageableActionLogs)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
+                "Données retournées par Tomcat non conformes à PageableActionLogDto",
             );
         }
 
         // Retour des logs d'actions du tableau
-        return actionLogs;
+        return pageableActionLogs;
     }
 
     /**
@@ -77,11 +77,13 @@ export class ActionLogService {
      * @param userPseudo le pseudo de l'utilisateur
      * @returns les logs d'actions de la tâche
      */
-    async getActionLogsByTaskId(taskId: string, page: string, size: string, userPseudo: string) : Promise<ActionLogDto[]> {
+    async getActionLogsByTaskId(taskId: string, page: string, size: string, userPseudo: string) : Promise<PageableActionLogDto> {
         // Construction de l'URL pour récupérer les logs d'actions de la tâche
         const url = new URL(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}/logs`);
         url.searchParams.set("page", page);
         url.searchParams.set("size", size);
+
+        console.log("URL appelée:", url.toString());
 
         // Envoie de la requête GET pour récupérer les logs d'actions de la tâche
         const response = await safeFetch(url.toString(), {
@@ -112,18 +114,18 @@ export class ActionLogService {
         }
 
         // reponse 2**, on traite les données
-        const actionLogs = await response.json();
+        const pageableActionLogs = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(actionLogs) || !actionLogs.every(isActionLogDto)) {
+        if (!isPageableActionLogDto(pageableActionLogs)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
-                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
+                "Données retournées par Tomcat non conformes à PageableActionLogDto",
             );
         }
 
         // Retour des logs d'actions de la tâche
-        return actionLogs;
+        return pageableActionLogs;
     }
 }

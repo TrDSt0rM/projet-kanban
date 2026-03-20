@@ -1,8 +1,17 @@
 export interface ActionLogDto {
-    id: string,
+    id: number,
     actionType: string,
-    dateTime: string,
+    datetime: string,
     targetId: string,
     targetType: string,
     userPseudo: string
+}
+
+export interface PageableActionLogDto {
+    content: ActionLogDto[],
+    totalPages: number,
+    totalElements: number,
+    currentPage: number,
+    first: boolean,
+    last: boolean
 }
