@@ -185,3 +185,24 @@ export interface InvitationDto {
     ownerPseudo: string;
     status: string;
 }
+
+/** =================================================
+ * Interface Log
+ ================================================= */
+export interface ActionLogDto {
+    id: number,
+    actionType: string,
+    datetime: string,
+    targetId: string,
+    targetType: string,
+    userPseudo: string | null;
+}
+
+export interface PageableActionLogDto {
+    content: ActionLogDto[],
+    totalPages: number,
+    totalElements: number,
+    currentPage: number,
+    first: boolean,
+    last: boolean
+}
