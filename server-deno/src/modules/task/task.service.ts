@@ -8,12 +8,18 @@ import { isTaskAssignRequest, isTaskSummaryDto, isTaskCreateRequest, isTaskUpdat
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 
 export class TaskService {
-  constructor() {}
+    constructor() {}
 
+    /**
+     * Liste les tâches d'une colonne
+     * @param columnId l'id de la colonne dont on veut récupérer les tâches
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns un tableau de tâches
+     */
     async getTasksByColumnId(columnId: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie la requête à Tomcat pour récupérer les tâches de la colonne
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/columns/${columnId}/tasks`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/columns/${columnId}/tasks`, {
             method: "GET",
             headers: {
                 "X-User-Pseudo": userPseudo,
@@ -22,21 +28,20 @@ export class TaskService {
 
         // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            }
-            else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la récupération des tâches",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
@@ -56,13 +61,22 @@ export class TaskService {
         return tasks;
     }
     
+    /**
+     * Crée une nouvelle tâche dans une colonne
+     * @param columnId l'id de la colonne dans laquelle créer la tâche
+     * @param task les données de création de la tâche
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns la tâche créée
+     */
     async createTask(columnId: string, task: TaskCreateRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
+        // Validation des données de création de tâche
         if(!isTaskCreateRequest(task)) {
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de création de tableau invalides");
         }
 
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/columns/${columnId}/tasks`, {
+        // Envoie de la requête à Tomcat pour créer la tâche
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/columns/${columnId}/tasks`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -71,12 +85,29 @@ export class TaskService {
             body: JSON.stringify(task),
         });
 
+        // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de la création de la tâche");
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                case 409:
+                    throw new APIException(APIErrorCode.CONFLICT, 409, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
+            }
         }
 
+        // reponse 2**, on parse la tâche créée
         const createdTask = await response.json();
-
         if (!isTaskSummaryDto(createdTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
@@ -85,38 +116,46 @@ export class TaskService {
             );
         }
 
+        // Retourne la tâche créée
         return createdTask;
     }
 
+    /**
+     * Récupère une tâche par son ID
+     * @param taskId l'ID de la tâche à récupérer
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns la tâche correspondante
+     */
     async getTaskById(taskId: string, userPseudo: string): Promise<TaskSummaryDto> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}`, {
+        // Envoie de la requête à Tomcat pour récupérer la tâche
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}`, {
             method: "GET",
             headers: {
                 "X-User-Pseudo": userPseudo,
             },
         });
 
+        // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Tâche inconnue");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            }
-            else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la récupération de la tâche",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
+        // reponse 2**, on parse la tâche retournée
         const task = await response.json();
-
         if (!isTaskSummaryDto(task)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
@@ -125,16 +164,26 @@ export class TaskService {
             );
         }
 
+        // Retourne la tâche correspondante
         return task;
     }
 
+    /**
+     * Met à jour une tâche
+     * @param taskId l'id de la tâche à mettre à jour
+     * @param taskUpdate les données de mise à jour de la tâche
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns la tâche mise à jour
+     */
     async updateTask(taskId: string, taskUpdate: TaskUpdateRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
+        // Validation des données de mise à jour de tâche
         if(!isTaskUpdateRequest(taskUpdate)) {
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de mise à jour de tâche invalides");
         }
 
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}`, {
+        // Envoie de la requête à Tomcat pour mettre à jour la tâche
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -143,12 +192,27 @@ export class TaskService {
             body: JSON.stringify(taskUpdate),
         });
 
+        // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de la mise à jour de la tâche");
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
+            }
         }
 
+        // reponse 2**, on parse la tâche mise à jour
         const updatedTask = await response.json();
-
         if (!isTaskSummaryDto(updatedTask)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
@@ -157,46 +221,65 @@ export class TaskService {
             );
         }
 
+        // Retourne la tâche mise à jour
         return updatedTask;
     }
 
+    /**
+     * Supprime une tâche
+     * @param taskId l'id de la tâche à supprimer
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns void
+     */
     async deleteTask(taskId: string, userPseudo: string): Promise<void> {
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}`, {
+
+        // Envoie de la requête à Tomcat pour supprimer la tâche
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}`, {
             method: "DELETE",
             headers: {
                 "X-User-Pseudo": userPseudo,
             },
         });
 
+        // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Tâche inconnue");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            }
-            else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la suppression de la tâche",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR,
+                        500,
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
+        // reponse 2**, la tâche a été supprimée avec succès
         return;
     }
 
-    async moveTask(taskId: string, taskMove: TaskMoveRequest, userPseudo: string): Promise<TaskSummaryDto> {
+    /**
+     * Déplace une tâche
+     * @param taskId l'id de la tâche à déplacer
+     * @param taskMove l'id de la colonne de destination
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns void
+     */
+    async moveTask(taskId: string, taskMove: TaskMoveRequest, userPseudo: string): Promise<void> {
 
+        // Validation des données de déplacement de tâche
         if(!isTaskMoveRequest(taskMove)) {
             throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Données de déplacement de tâche invalides");
         }
 
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}/move`, {
+        // Envoie de la requête à Tomcat pour déplacer la tâche
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}/move`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -205,24 +288,36 @@ export class TaskService {
             body: JSON.stringify(taskMove),
         });
 
+        // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors du déplacement de la tâche");
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
+            }
         }
 
-        const movedTask = await response.json();
-
-        if (!isTaskSummaryDto(movedTask)) {
-            throw new APIException(
-                APIErrorCode.INTERNAL_SERVER_ERROR,
-                500,
-                "Données retournées par Tomcat non conformes à TaskSummaryDto",
-            );
-        }
-
-        return movedTask;
+        return;
     }
 
-    async updateTaskPosition(taskId: string, taskPosition: TaskPositionRequest, userPseudo: string): Promise<TaskSummaryDto> {
+    /**
+     * Met à jour la position d'une tâche
+     * @param taskId l'id de la tâche à mettre à jour
+     * @param taskPosition les nouvelles coordonnées de la tâche
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns void
+     */
+    async updateTaskPosition(taskId: string, taskPosition: TaskPositionRequest, userPseudo: string): Promise<void> {
 
         // Validation des données de mise à jour de position de tâche
         if(!isTaskPositionRequest(taskPosition)) {
@@ -230,7 +325,7 @@ export class TaskService {
         }
 
         // Envoie de la requête à Tomcat pour mettre à jour la position de la tâche
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}/position`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}/position`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -241,23 +336,33 @@ export class TaskService {
         
         // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de la mise à jour de la position de la tâche");
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
+            }
         }
 
-        // reponse 2**, on parse la tâche retournée
-        const updatedTask = await response.json();
-        if(!isTaskSummaryDto(updatedTask)) {
-            throw new APIException(
-                APIErrorCode.INTERNAL_SERVER_ERROR,
-                500,
-                "Données retournées par Tomcat non conformes à TaskSummaryDto",
-            );
-        }
-
-        // Retourne la tâche avec la position mise à jour
-        return updatedTask;
+        return;
     }
 
+    /**
+     * Assigne une tâche à un utilisateur
+     * @param taskId l'id de la tâche à assigner
+     * @param taskAssign le pseudo de l'utilisateur à qui assigner la tâche
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
+     * @returns la tâche avec l'utilisateur assigné
+     */
     async assignTask(taskId: string, taskAssign: TaskAssignRequest, userPseudo: string): Promise<TaskSummaryDto> {
 
         // Validation des données d'assignation de tâche
@@ -266,7 +371,7 @@ export class TaskService {
         }
 
         // Envoie de la requête à Tomcat pour assigner la tâche
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/tasks/${taskId}/assign`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/tasks/${taskId}/assign`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -277,7 +382,21 @@ export class TaskService {
         
         // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, 500, "Erreur lors de l'assignation de la tâche");
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
+            }
         }
         
         // reponse 2**, on parse la tâche retournée
@@ -297,7 +416,7 @@ export class TaskService {
     async searchTasksByKeyword(boardId: string, keyword: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie de la requête à Tomcat pour rechercher les tâches du tableau correspondant au mot-clé
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/tasks/search?keyword=${keyword}`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/tasks/search?keyword=${keyword}`, {
             method: "GET",
             headers: {
                 "X-User-Pseudo": userPseudo,
@@ -306,21 +425,20 @@ export class TaskService {
 
         // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Tableau inconnu");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            }
-            else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la recherche des tâches",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
@@ -343,7 +461,7 @@ export class TaskService {
     async searchTasksByPriority(boardId: string, priority: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie de la requête à Tomcat pour rechercher les tâches du tableau correspondant à la priorité
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/tasks/search?priority=${priority}`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/tasks/search?priority=${priority}`, {
             method: "GET",
             headers: {
                 "X-User-Pseudo": userPseudo,
@@ -352,21 +470,20 @@ export class TaskService {
 
         // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Tableau inconnu");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            }
-            else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la recherche des tâches",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
@@ -374,12 +491,22 @@ export class TaskService {
         const tasks = await response.json();
 
         // Vérification de la conformité des données retournées par Tomcat
-        if (!Array.isArray(tasks) || !tasks.every(isTaskSummaryDto)) {
-            throw new APIException(
-                APIErrorCode.INTERNAL_SERVER_ERROR,
-                500,
-                "Données retournées par Tomcat non conformes à TaskSummaryDto[]",
-            );
+        if (!response.ok) {
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
+            }
         }
 
         // Retourne les tâches correspondant à la priorité de recherche
@@ -389,7 +516,7 @@ export class TaskService {
     async searchTasksByAssignedTo(boardId: string, assignedTo: string, userPseudo: string): Promise<TaskSummaryDto[]> {
 
         // Envoie de la requête à Tomcat pour rechercher les tâches du tableau correspondant à un utilisateur assigné
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/tasks/search?assignedTo=${assignedTo}`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/tasks/search?assignedTo=${assignedTo}`, {
             method: "GET",
             headers: {
                 "X-User-Pseudo": userPseudo,
@@ -398,21 +525,20 @@ export class TaskService {
 
         // reponse diffent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Tableau inconnu");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            }
-            else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la recherche des tâches",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 

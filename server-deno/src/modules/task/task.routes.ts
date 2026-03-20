@@ -9,6 +9,16 @@ export const router = new Router();
 
 router.use(authMiddleware);
 
+/** 
+ * GET /columns/:columnId/tasks - Récupérer les tâches d'une colonne
+ * @param columnId l'id de la colonne
+ * @return TaskSummaryDto[] les tâches de la colonne
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas membre du tableau auquel appartient la colonne
+ * @throws 404 si la colonne cible n'existe pas ou si l'utilisateur n'est pas membre du tableau auquel appartient la colonne
+ * @throws 500 si une erreur interne se produit lors de la récupération des tâches depuis Tomcat
+ * @throws 500 si les données retournées par Tomcat ne sont pas conformes à TaskSummaryDto[]
+ */
 router.get("/columns/:columnId/tasks", async (ctx) => {
     const columnId = ctx.params.columnId!;
     const userPseudo = ctx.state.user?.pseudo;
@@ -126,7 +136,7 @@ router.delete("/tasks/:taskId", async (ctx) => {
     }
     
     // Envoi de la réponse
-    ctx.response.status = 204;
+    ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
 
@@ -152,7 +162,7 @@ router.patch("/tasks/:taskId/move", async (ctx) => {
     }
     
     // Envoi de la réponse
-    ctx.response.status = 204;
+    ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
 
@@ -178,7 +188,7 @@ router.patch("/tasks/:taskId/position", async (ctx) => {
     }
     
     // Envoi de la réponse
-    ctx.response.status = 204;
+    ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
 
@@ -228,11 +238,14 @@ router.get("/boards/:boardId/tasks/search", async (ctx) => {
         tasks = await taskService.searchTasksByPriority(boardId, priority, userPseudo);
     } else if (assignedTo) {
         tasks = await taskService.searchTasksByAssignedTo(boardId, assignedTo, userPseudo);
+    } else {
+        throw new APIException(APIErrorCode.BAD_REQUEST, 400, "Aucun critère de recherche fourni");
     }
 
+    const responseBody : APIResponse<TaskSummaryDto[]> = {
+        success: true,
+        data: tasks,
+    }
     ctx.response.status = 200;
-    ctx.response.body = { 
-        success: true, 
-        data: tasks 
-    };
+    ctx.response.body = responseBody;
 });
