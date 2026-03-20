@@ -6,8 +6,10 @@ import { TaskService } from "../modules/task/task.service.ts";
 import { InvitationService } from "../modules/invitation/invitation.service.ts";
 import { UserService } from "../modules/user/user.service.ts";
 import { AdminService } from "../modules/admin/admin.service.ts";
+import { ActionLogService } from "../modules/actionLog/actionLog.service.ts";
 
 // Initialisation des services
+export const actionLogService = new ActionLogService();
 export const authService = new AuthService();
 export const boardService = new BoardService();
 export const boardColumnService = new BoardColumnService();

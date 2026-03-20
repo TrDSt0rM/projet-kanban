@@ -16,8 +16,8 @@ Deno.test("AuthService.login - Succès avec simulation Tomcat", async () => {
 
   const mockUser = {
     pseudo: "testeur",
-    role: "USER",
-    isActive: 1,
+    userRole: "USER",
+    active: true,
     // Hash pour "password123"
     password: passwordHash
   };
@@ -40,8 +40,8 @@ Deno.test("AuthService.login - Succès avec simulation Tomcat", async () => {
 Deno.test("AuthService.login - Échec si mot de passe incorrect", async () => {
   const mockUser = {
     pseudo: "testeur",
-    role: "USER",
-    isActive: 1,
+    userRole: "USER",
+    active: true,
     password: "faux_hash.faux_sel" // Hash incorrect pour simuler un mot de passe erroné
   };
 

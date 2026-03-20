@@ -1,5 +1,6 @@
 import { Application } from "@oak/oak";
 import { oakCors } from "@tajpouria/cors";
+import { router as actionLogRouter } from "./src/modules/actionLog/actionLog.routes.ts";
 import { router as adminRouter } from "./src/modules/admin/admin.routes.ts";
 import { router as authRouter } from "./src/modules/auth/auth.routes.ts";
 import { router as boardRouter } from "./src/modules/board/board.routes.ts";
@@ -31,6 +32,7 @@ app.use(errorMiddleware);
 
 // ---------- Enregistrement des Routes ---------------------
 
+app.use(actionLogRouter.routes(), actionLogRouter.allowedMethods());
 app.use(adminRouter.routes(), adminRouter.allowedMethods());
 app.use(authRouter.routes(), authRouter.allowedMethods());
 app.use(invitationRouter.routes(), invitationRouter.allowedMethods());
