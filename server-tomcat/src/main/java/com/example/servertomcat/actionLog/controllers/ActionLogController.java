@@ -38,4 +38,11 @@ public class ActionLogController {
         return ResponseEntity.ok(actionLogService.getTaskLogs(taskId, pseudo, page, size));
     }
 
+    @GetMapping("/admin/logs")
+    public ResponseEntity<PageDto<ActionLogDto>> getLogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        return ResponseEntity.ok(actionLogService.getLogs(page, size));
+    }
+
 }

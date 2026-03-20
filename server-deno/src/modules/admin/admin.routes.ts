@@ -6,6 +6,7 @@ import { authMiddleware, adminOnlyMiddleware } from "../../shared/middlewares/au
 import { adminService } from "../../shared/container.ts";
 import { APIException, APIErrorCode, APIResponse, UserDto } from "../../shared/types/mod.ts";
 import { StatsDto } from "./admin.type.ts";
+import { PageableActionLogDto } from "../actionLog/actionLog.type.ts";
 
 export const router = new Router({ prefix: "/admin" });
 
@@ -148,6 +149,27 @@ router.get("/stats", adminOnlyMiddleware, async (ctx) => {
     const responseBody: APIResponse<StatsDto> = {
         success: true,
         data: stats,
+    };
+    ctx.response.status = 200;
+    ctx.response.body = responseBody;
+});
+
+router.get("/logs", adminOnlyMiddleware, async (ctx) => {
+    const adminPseudo = ctx.state.user?.pseudo;
+    
+    // Vérification de l'authentification de l'utilisateur
+    if (!adminPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+    const page = ctx.request.url.searchParams.get("page") ?? "0";
+    const size = ctx.request.url.searchParams.get("size") ?? "10";
+    
+    // Récupération des logs d'actions depuis le service
+    const logs = await adminService.getLogs(page, size);
+    // Construction de la réponse
+    const responseBody: APIResponse<PageableActionLogDto> = {
+        success: true,
+        data: logs,
     };
     ctx.response.status = 200;
     ctx.response.body = responseBody;

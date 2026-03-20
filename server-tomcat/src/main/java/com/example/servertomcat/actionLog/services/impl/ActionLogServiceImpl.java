@@ -71,6 +71,22 @@ public class ActionLogServiceImpl implements ActionLogService {
         );
     }
 
+    @Override
+    public PageDto<ActionLogDto> getLogs(int page, int size){
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ActionLog> result = actionLogRepository
+                .findAll(pageable);
+
+        return new PageDto<>(
+                result.getContent().stream().map(actionLogMapper::toDto).toList(),
+                result.getTotalPages(),
+                result.getTotalElements(),
+                result.getNumber(),
+                result.isLast(),
+                result.isFirst()
+        );
+    }
+
     private void checkIsMember(String boardId, String pseudo) {
         if (!boardMemberRepository.existsByIdIdBoardAndIdPseudoUser(boardId, pseudo)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,

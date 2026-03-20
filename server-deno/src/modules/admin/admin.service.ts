@@ -5,6 +5,8 @@ import { URL_SERVER_TOMCAT } from "../../shared/container.ts";
 import { APIException, APIErrorCode, UserDto, UserUpdateRequest } from "../../shared/types/mod.ts";
 import { safeFetch } from "../../shared/utils/gateway.utils.ts";
 import { isUserDto, isUserUpdateRequest } from "../../shared/utils/typeguards.ts";
+import { PageableActionLogDto } from "../actionLog/actionLog.type.ts";
+import { isPageableActionLogDto } from "../actionLog/actionLog.typeguards.ts";
 import { StatsDto } from "./admin.type.ts";
 import { isStatsDto } from "./admin.typeguards.ts";
 
@@ -172,5 +174,46 @@ export class AdminService {
         }
 
         return stats;
+    }
+
+    async getLogs(page: string, size: string): Promise<PageableActionLogDto> {
+        const url = new URL(`${URL_SERVER_TOMCAT}/api/admin/logs`);
+        url.searchParams.set("page", page);
+        url.searchParams.set("size", size);
+
+        console.log("URL appelée:", url.toString());
+
+        const response = await safeFetch(url.toString(), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if(!response.ok) {
+            const error = await response.json();
+
+            switch(response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, response.status, error.message || "Requête invalide");
+                case 401:
+                    throw new APIException(APIErrorCode.UNAUTHORIZED, response.status, error.message || "Non autorisé");
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, response.status, error.message || "Accès interdit");
+                default:
+                    throw new APIException(APIErrorCode.INTERNAL_SERVER_ERROR, response.status, error.message || "Erreur lors de la récupération des logs d'actions");
+            }
+        }
+
+        const logs: PageableActionLogDto = await response.json();
+        if (!isPageableActionLogDto(logs)) {
+            throw new APIException(
+                APIErrorCode.INTERNAL_SERVER_ERROR,
+                500,
+                "Données retournées par Tomcat non conformes à PageableActionLogDto",
+            );
+        }
+
+        return logs;
     }
 }
