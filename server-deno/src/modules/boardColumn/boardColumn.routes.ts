@@ -22,6 +22,7 @@ router.use(authMiddleware);
  * @param boardId l'id du tableau dont on veut récupérer les colonnes
  * @return les colonnes du tableau correspondant à l'id
  * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas membre du tableau
  * @throws 404 si le tableau cible n'existe pas ou si l'utilisateur n'est pas membre du tableau
  * @throws 500 si une erreur interne se produit lors de la récupération des colonnes depuis Tomcat
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardColumnDto[]
@@ -36,7 +37,7 @@ router.get("/boards/:boardId/columns", async (ctx) => {
     }
 
     // Récupération des colonnes du tableau depuis le service avec l'id du tableau
-    const columns = await boardColumnService.getColumnsByBoardId(boardId);
+    const columns = await boardColumnService.getColumnsByBoardId(boardId, userPseudo);
 
     // Construction de la réponse
     const responseBody : APIResponse<BoardColumnDto[]> = {
@@ -55,7 +56,9 @@ router.get("/boards/:boardId/columns", async (ctx) => {
  * @param body les données de la colonne à créer (nom)
  * @return la colonne créée
  * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas membre du tableau
  * @throws 404 si le tableau cible n'existe pas
+ * @throws 409 si une colonne avec le même nom existe déjà dans le tableau
  * @throws 500 si une erreur interne se produit lors de la création de la colonne depuis Tomcat
  * @throws 500 si les données retournées par Tomcat ne sont pas conformes à BoardColumnDto
  */
@@ -95,13 +98,25 @@ router.post("/boards/:boardId/columns", async (ctx) => {
  */
 router.put("/columns/:columnId", async (ctx) => {
     const columnId = ctx.params.columnId!;
-    const userPseudo = ctx.state.user.pseudo;
+    const userPseudo = ctx.state.user?.pseudo;
+
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
     const body = await ctx.request.body.json();
 
+    // Modification de la colonne depuis le service
     const updatedColumn = await boardColumnService.updateColumn(columnId, body, userPseudo);
 
+    // construction de la réponse
+    const responseBody: APIResponse<BoardColumnDto> = {
+        success: true,
+        data: updatedColumn,
+    };
     ctx.response.status = 200;
-    ctx.response.body = { success: true, data: updatedColumn };
+    ctx.response.body = responseBody;
 });
 
 /**
@@ -116,21 +131,53 @@ router.put("/columns/:columnId", async (ctx) => {
  */
 router.patch("/columns/:columnId/position", async (ctx) => {
     const columnId = ctx.params.columnId!;
-    const userPseudo = ctx.state.user.pseudo;
+    const userPseudo = ctx.state.user?.pseudo;
+
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
     const body = await ctx.request.body.json();
 
+    // Modification de la position de la colonne depuis le service
     await boardColumnService.updateColumnPosition(columnId, body, userPseudo);
 
+    // Construction de la réponse
+    const responseBody: APIResponse<null> = {
+        success: true,
+        data: null,
+    };
     ctx.response.status = 200;
-    ctx.response.body = { success: true, data: null };
+    ctx.response.body = responseBody;
 });
 
+/**
+ * DELETE /columns/:columnId - Supprimer une colonne
+ * @param columnId l'id de la colonne à supprimer
+ * @return void
+ * @throws 401 si l'utilisateur n'est pas authentifié
+ * @throws 403 si l'utilisateur n'est pas membre du tableau auquel appartient la colonne
+ * @throws 404 si la colonne cible n'existe pas ou si l'utilisateur n'est pas membre du tableau auquel appartient la colonne
+ * @throws 500 si une erreur interne se produit lors de la suppression de la colonne depuis Tomcat
+ */
 router.delete("/columns/:columnId", async (ctx) => {
     const columnId = ctx.params.columnId!;
-    const userPseudo = ctx.state.user.pseudo;
+    const userPseudo = ctx.state.user?.pseudo;
 
+    // Vérification de l'authentification de l'utilisateur
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    // Suppression de la colonne depuis le service
     await boardColumnService.deleteColumn(columnId, userPseudo);
 
+    // Construction de la réponse
+    const responseBody: APIResponse<null> = {
+        success: true,
+        data: null,
+    };
     ctx.response.status = 200;
-    ctx.response.body = { success: true, data: null };
+    ctx.response.body = responseBody;
 });

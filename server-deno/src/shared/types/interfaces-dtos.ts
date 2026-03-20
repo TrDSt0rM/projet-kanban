@@ -89,7 +89,7 @@ export interface BoardColumnDto {
 }
 
 export interface BoardColumnUpdatePositionRequest {
-    newPosition: number;
+    position: number;
 }
 
 export interface BoardColumnUpdateRequest {

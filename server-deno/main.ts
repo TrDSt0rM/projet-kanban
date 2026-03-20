@@ -3,7 +3,7 @@ import { oakCors } from "@tajpouria/cors";
 import { router as adminRouter } from "./src/modules/admin/admin.routes.ts";
 import { router as authRouter } from "./src/modules/auth/auth.routes.ts";
 import { router as boardRouter } from "./src/modules/board/board.routes.ts";
-import { router as boardColumnRouter } from "./src/modules/boardColumn/boardColumn.route.ts";
+import { router as boardColumnRouter } from "./src/modules/boardColumn/boardColumn.routes.ts";
 import { router as invitationRouter } from "./src/modules/invitation/invitation.routes.ts";
 import { router as taskRouter } from "./src/modules/task/task.routes.ts";
 import { router as userRouter } from "./src/modules/user/user.routes.ts";

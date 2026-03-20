@@ -16,31 +16,36 @@ export class BoardColumnService {
     /**
      * Récupère les colonnes d'un tableau à partir de son id
      * @param boardId l'id du tableau dont on veut récupérer les colonnes
+     * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
      * @returns les colonnes du tableau correspondant à l'id
      */
-    async getColumnsByBoardId(boardId: string): Promise<BoardColumnDto[]> {
+    async getColumnsByBoardId(boardId: string, userPseudo: string): Promise<BoardColumnDto[]> {
         
         // Appel à Tomcat pour récupérer les colonnes du tableau
-        const response = await safeFetch(`${URL_SERVER_TOMCAT}/boards/${boardId}/columns`, {
+        const response = await safeFetch(`${URL_SERVER_TOMCAT}/api/boards/${boardId}/columns`, {
             method: "GET",
+            headers: { 
+                "X-User-Pseudo": userPseudo
+            }
         });
 
         // reponse différent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Tableau inconnu");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau",
-                );
-            } else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la récupération des colonnes du tableau",
-                );
+            const error = await response.json();
+            
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
         
@@ -48,7 +53,7 @@ export class BoardColumnService {
         const columns: BoardColumnDto[] = await response.json();
         
         // on vérifie que les données retournées sont conformes à BoardColumnDto[]
-        if (!Array.isArray(columns) || !columns.every(col => "idColumn" in col && "columnName" in col && "position" in col)) {
+        if (!Array.isArray(columns) || !columns.every(isBoardColumnDto)) {
             throw new APIException(
                 APIErrorCode.INTERNAL_SERVER_ERROR,
                 500,
@@ -84,18 +89,24 @@ export class BoardColumnService {
 
         // reponse différent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN, 
-                    403, 
-                    "Vous n'avez pas les droits pour ajouter une colonne à ce tableau"
-                );
+            const error = await response.json();
+            
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                case 409:
+                    throw new APIException(APIErrorCode.CONFLICT, 409, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
-            throw new APIException(
-                APIErrorCode.INTERNAL_SERVER_ERROR, 
-                response.status, 
-                "Erreur lors de la création de la colonne sur Tomcat"
-            );
         }
 
         // reponse 2**, on parse la colonne créée
@@ -137,21 +148,23 @@ export class BoardColumnService {
         });
 
         // reponse différent de 2**, on traite l'erreur
+        // reponse différent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue ou accès refusé");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau auquel appartient la colonne",
-                );
-            } else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la modification de la colonne",
-                );
+            const error = await response.json();
+            
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
@@ -176,7 +189,7 @@ export class BoardColumnService {
      * @param userPseudo le pseudo de l'utilisateur (pour le header X-User-Pseudo)
      * @return void
      */
-    async updateColumnPosition(columnId: string, position: BoardColumnUpdatePositionRequest, userPseudo: string): Promise<BoardColumnDto> {
+    async updateColumnPosition(columnId: string, position: BoardColumnUpdatePositionRequest, userPseudo: string): Promise<void> {
 
         // Validation des données de mise à jour de position
         if (!isBoardColumnPositionUpdateRequest(position)) {
@@ -195,35 +208,24 @@ export class BoardColumnService {
 
         // reponse différent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue ou accès refusé");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau auquel appartient la colonne",
-                );
-            } else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la modification de la position de la colonne",
-                );
+            const error = await response.json();
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 
-        // reponse 2**, on parse la colonne modifiée
-        const updatedColumn = await response.json();
-        if(!isBoardColumnDto(updatedColumn)) {
-            throw new APIException(
-                APIErrorCode.INTERNAL_SERVER_ERROR,
-                500,
-                "Données retournées par Tomcat non conformes à BoardColumnDto",
-            );
-        }
-
-        // on retourne la colonne modifiée
-        return updatedColumn;
+       return;
     }
 
     /**
@@ -239,21 +241,23 @@ export class BoardColumnService {
             headers: { "X-User-Pseudo": userPseudo }
         });
 
+        // reponse différent de 2**, on traite l'erreur
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new APIException(APIErrorCode.NOT_FOUND, 404, "Colonne inconnue ou accès refusé");
-            } else if (response.status === 403) {
-                throw new APIException(
-                    APIErrorCode.FORBIDDEN,
-                    403,
-                    "Accès refusé, vous n'êtes pas membre du tableau auquel appartient la colonne",
-                );
-            } else {
-                throw new APIException(
-                    APIErrorCode.INTERNAL_SERVER_ERROR,
-                    500,
-                    "Erreur lors de la suppression de la colonne",
-                );
+            const error = await response.json();
+            
+            switch (response.status) {
+                case 400:
+                    throw new APIException(APIErrorCode.BAD_REQUEST, 400, error.message);
+                case 403:
+                    throw new APIException(APIErrorCode.FORBIDDEN, 403, error.message);
+                case 404:
+                    throw new APIException(APIErrorCode.NOT_FOUND, 404, error.message);
+                default:
+                    throw new APIException(
+                        APIErrorCode.INTERNAL_SERVER_ERROR, 
+                        500, 
+                        "Erreur lors de la communication avec le serveur"
+                    );
             }
         }
 

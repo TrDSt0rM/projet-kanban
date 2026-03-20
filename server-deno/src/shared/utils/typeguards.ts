@@ -178,8 +178,8 @@ export function isBoardColumnDto(obj: unknown): obj is BoardColumnDto {
     typeof obj === "object" &&
     "idColumn" in obj &&
     typeof obj.idColumn === "string" &&
-    "ColumnName" in obj &&
-    typeof obj.ColumnName === "string" &&
+    "columnName" in obj &&
+    typeof obj.columnName === "string" &&
     "position" in obj &&
     typeof obj.position === "number" &&
     "tasks" in obj &&
@@ -269,7 +269,7 @@ export function isTaskSummaryDto(obj: unknown): obj is TaskSummaryDto {
     typeof obj.position === "number" &&
     "priority" in obj &&
     typeof obj.priority === "string" &&
-    ("expectedCompletionDate" in obj ? typeof obj.expectedCompletionDate === "string" : true) &&
+    ("limitDate" in obj ? typeof obj.limitDate === "string" : true) &&
     ("assignedTo" in obj ? typeof obj.assignedTo === "string" : true)
   );
 }
