@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.example.servertomcat.board.repositories.BoardRepository;
+import com.example.servertomcat.board.repositories.BoardMemberRepository;
+import com.example.servertomcat.board.entities.Board;
 
 import java.util.List;
 
@@ -23,6 +26,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final BoardRepository boardRepository;
+    private final BoardMemberRepository boardMemberRepository;
 
     public long countUsers() {
         return userRepository.count();
@@ -71,10 +76,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(String pseudo) {
         if (!userRepository.existsById(pseudo)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé");
         }
+        List<String> ownedBoardIds = boardMemberRepository.findBoardIdsByOwner(pseudo);
+
+        if (!ownedBoardIds.isEmpty()) {
+            boardRepository.deleteAllById(ownedBoardIds);
+        }
+        boardMemberRepository.deleteByIdPseudoUser(pseudo);
         userRepository.deleteById(pseudo);
     }
 

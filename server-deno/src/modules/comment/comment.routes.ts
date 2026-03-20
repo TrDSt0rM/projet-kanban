@@ -266,3 +266,31 @@ router.delete("/tasks/:taskId/attachments/:attachmentId", async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });
+
+/**
+ * GET /files/:fileId - Télécharger/Voir une pièce jointe
+ */
+router.get("/files/:fileId", async (ctx) => {
+    const fileId = ctx.params.fileId!;
+    const userPseudo = ctx.state.user?.pseudo;
+
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Non authentifié");
+    }
+
+    try {
+        // On récupère la réponse brute du serveur Tomcat
+        const fileResponse = await commentService.getAttachmentFile(fileId, userPseudo);
+        
+        // On transfère les headers importants (Type de fichier, Content-Length)
+        ctx.response.type = fileResponse.headers.get("Content-Type") || "application/octet-stream";
+        
+        // On envoie le corps du fichier
+        ctx.response.body = fileResponse.body;
+    } catch (err) {
+        ctx.response.status = 404;
+        ctx.response.body = { success: false, message: "Fichier introuvable" };
+    }
+});
+
+

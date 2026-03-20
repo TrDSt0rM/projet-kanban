@@ -10,7 +10,9 @@ import {
   UserX,
   Trash2,
   UserPlus,
-  Lock
+  Lock,
+  BarChart3,
+  ClipboardList
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
@@ -137,15 +139,36 @@ export function Admin({ user, onLogout }: AdminProps) {
         </button>
 
         <div className="bg-white rounded-2xl shadow-sm border p-8">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <ShieldCheck className="size-6 text-purple-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Panel Administration</h1>
-              <p className="text-gray-500 text-sm">Gérez les accès et les rôles des utilisateurs.</p>
-            </div>
-          </div>
+<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+  <div className="flex items-center gap-3">
+    <div className="p-3 bg-purple-50 rounded-lg">
+      <ShieldCheck className="size-6 text-purple-600" />
+    </div>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">Panel Administration</h1>
+      <p className="text-gray-500 text-sm">Gérez les accès et les rôles des utilisateurs.</p>
+    </div>
+  </div>
+
+  {/* Groupe de boutons d'action */}
+  <div className="flex items-center gap-3">
+    <button
+      onClick={() => navigate("/admin/logs")}
+      className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium text-sm"
+    >
+      <ClipboardList className="size-4" />
+      Logs système
+    </button>
+
+    <button
+      onClick={() => navigate("/admin/stats")}
+      className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm font-medium text-sm"
+    >
+      <BarChart3 className="size-4" />
+      Voir les statistiques
+    </button>
+  </div>
+</div>
 
           {isLoading ? (
             <div className="flex justify-center p-12">

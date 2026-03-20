@@ -249,3 +249,25 @@ router.delete("/:id/members/:memberPseudo", async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = responseBody;
 });    
+
+/**
+ * Assigne une tâche à un utilisateur
+ * @route PATCH /boards/:boardId/tasks/:taskId/assign
+ */
+router.patch("/:boardId/tasks/:taskId/assign", async (ctx) => {
+    const { boardId, taskId } = ctx.params;
+    const userPseudo = ctx.state.user?.pseudo;
+    const { assigneePseudo } = await ctx.request.body.json(); // Le pseudo de celui à qui on donne la tâche
+
+    if (!userPseudo) {
+        throw new APIException(APIErrorCode.UNAUTHORIZED, 401, "Utilisateur non authentifié");
+    }
+
+    const updatedTask = await boardService.assignTask(boardId!, taskId!, assigneePseudo, userPseudo);
+
+    ctx.response.status = 200;
+    ctx.response.body = {
+        success: true,
+        data: updatedTask,
+    };
+});

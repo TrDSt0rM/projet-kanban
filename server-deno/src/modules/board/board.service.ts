@@ -363,4 +363,30 @@ export class BoardService {
 
     return true;
   }
+
+  /**
+   * Assigne une tâche à un membre du tableau via Tomcat
+   */
+  async assignTask(boardId: string, taskId: string, assigneePseudo: string, me: string): Promise<any> {
+    const response = await safeFetch(
+      `${URL_SERVER_TOMCAT}/api/boards/${boardId}/tasks/${taskId}/assign`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Pseudo": me,
+        },
+        body: JSON.stringify({ pseudo: assigneePseudo }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new APIException(
+        APIErrorCode.INTERNAL_SERVER_ERROR,
+        response.status,
+        "Erreur lors de l'assignation de la tâche sur Tomcat"
+      );
+    }
+
+    return await response.json();
+  }
 }
